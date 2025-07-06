@@ -45,7 +45,7 @@ namespace HomeServer_Backend
         public void LogInfo(string message)
         {
             string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {message}";
-            Console.WriteLine($"({m_Logs_path}) {logMessage}");
+            Console.WriteLine($"({m_ProcessName}) {logMessage}");
             
             if (LogFileWriter != null)
             {
@@ -56,7 +56,7 @@ namespace HomeServer_Backend
         public void LogError(string message)
         {
             string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR - {message}";
-            Console.WriteLine($"({m_Logs_path}) {logMessage}");
+            Console.WriteLine($"({m_ProcessName}) {logMessage}");
             
             if (LogFileWriter != null)
             {
