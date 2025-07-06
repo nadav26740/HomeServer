@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,13 +9,21 @@ namespace HomeServer_Backend
 {
     public class Logger
     {
-        private static string _logPath = Loader.ConfigData.default_config_path;
+        private static string m_logPath = Loader.ConfigData.default_config_path;
         private static Logger? m_instance = null;
+        private bool WriteToFile = true;
+        
         public static Logger Instance { get {  return GetIntance(); } }
      
         private Logger()
         {
             // TODO: Initialize logging settings here if needed
+        }
+
+
+        private void _LoadFromConfig()
+        {
+            // TODO: loading settings from config
         }
 
         // Core!
@@ -44,6 +51,7 @@ namespace HomeServer_Backend
 
             // Write logs
             // TODO
+            // using (StreamWriter sw = File.AppendText(this.m_logPath))
             Console.WriteLine(message);
         }
 
@@ -60,7 +68,7 @@ namespace HomeServer_Backend
                 throw new Exception("unable to change logging path after log started");
             }
 
-            _logPath = path;
+            m_logPath = path;
         }
 
         /// <summary>
@@ -70,7 +78,7 @@ namespace HomeServer_Backend
         public static void ForceSetLoggingPath(string path)
         {
             LogWarn($"Changing Log Path to: {path}");
-            _logPath = path;
+            m_logPath = path;
             if (Logger.m_instance != null)
                 m_instance = new Logger();
         }
