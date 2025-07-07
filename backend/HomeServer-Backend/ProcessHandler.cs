@@ -1,17 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using HomeServer_Backend.ExtensionsLibs;
+using System.Management;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace HomeServer_Backend
 {
     public class ProcessHandler
     {
+        
+
+        public struct ProcessRunningData
+        {
+            public string ProcessName;
+            public long MemoryUsage;
+            public long ChildrensMemoryUsage;
+            public bool Running;
+            public int ProcessID;
+            public Process[] Childrens; // TODO: What to do with it
+
+        }
         public struct ProcessInfo
         {
-            public string Name;
+            public string Tag;
             public string Path;
             public string Arguments;
             public string WorkingDirectory;
@@ -19,7 +34,7 @@ namespace HomeServer_Backend
 
             public ProcessInfo(string name, string path, string arguments, string workingDirectory, string? exitCodeInput = null)
             {
-                Name = name;
+                Tag = name;
                 Path = path;
                 Arguments = arguments;
                 WorkingDirectory = workingDirectory;
@@ -28,7 +43,7 @@ namespace HomeServer_Backend
 
             public override string ToString()
             {
-                return $"Process Name: {Name}\n" +
+                return $"Process Tag: {Tag}\n" +
                     $"Process Path: {Path}\n" +
                     $"Process Arguments: {Arguments}\n" +
                     $"Working Directory: {WorkingDirectory}" +
@@ -38,6 +53,7 @@ namespace HomeServer_Backend
 
         // Fields
         private ProcessInfo m_info;
+        public ProcessInfo Info { get { return m_info; } }
         private Process m_process;
         private ProcessLogger? m_logger;
         public bool IsRunning { get { return m_process != null && !m_process.HasExited; } }
@@ -54,6 +70,75 @@ namespace HomeServer_Backend
             {
                 Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {args.Data}");
             }
+        }
+
+        public int? GetProcessID()
+        {
+            if (m_process == null || m_process.HasExited)
+            {
+                return null;
+            }
+            return m_process.Id;
+        }
+
+        public string GetProcessName()
+        {
+            if (m_process == null || m_process.HasExited)
+            {
+                return string.Empty;
+            }
+            return m_process.ProcessName;
+        }
+
+        public long GetMemoryUsage()
+        {
+            m_process.Refresh();
+            if (m_process == null || m_process.HasExited)
+            {
+                throw new InvalidOperationException("Process is not running or has already exited.");
+            }
+
+            return m_process.WorkingSet64;
+        }
+
+        public string GetMemoryUsageString()
+        {
+            m_process.Refresh();
+            if (m_process == null || m_process.HasExited)
+            {
+                throw new InvalidOperationException("Process is not running or has already exited.");
+            }
+
+            return m_process.GetMemoryUsageFormated();
+        }
+
+        public long GetChildrensMemoryUsage()
+        {
+            if (m_process == null || m_process.HasExited)
+            {
+                throw new InvalidOperationException("Process is not running or has already exited.");
+            }
+
+            long totalMemory = 0;
+            try
+            {
+                m_logger.LogInfo($"Retrieving child processes memory for PID: {m_process.Id}");
+                foreach (Process obj in this.m_process.GetChildProcesses())
+                {
+                    totalMemory += Convert.ToInt64(obj.WorkingSet64);
+                }
+            }
+            catch (Exception ex)
+            {
+                m_logger?.LogError($"Error retrieving child processes memory: {ex.Message}");
+            }
+
+            return totalMemory;
+        }
+
+        public string GetChildrensMemoryUsageString()
+        {
+            return ProcessExtensions.BytesToFormatedString(GetChildrensMemoryUsage());
         }
 
         private void OutputError(object sender, DataReceivedEventArgs args)
@@ -86,7 +171,7 @@ namespace HomeServer_Backend
         public void StopProcess()
         {
             // TODO 
-            m_logger.LogInfo($"Stopping process {m_info.Name} with PID: {m_process.Id}");
+            m_logger.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process.Id}");
             if (IsRunning)
             {
                 if (m_info.ExitCodeInput != null)
@@ -116,7 +201,7 @@ namespace HomeServer_Backend
             {
                 m_process = null;
                 m_logger = null;
-                Logger.LogInfo($"Process {m_info.Name} stopped.");
+                Logger.LogInfo($"Process {m_info.Tag} stopped.");
             }   
         }
 
@@ -155,7 +240,7 @@ namespace HomeServer_Backend
             
 
             // Adding logs event
-            m_logger = new ProcessLogger(m_info.Name);
+            m_logger = new ProcessLogger(m_info.Tag);
             m_process.OutputDataReceived += OutputLog;
             m_process.ErrorDataReceived += OutputError;
 
@@ -164,13 +249,15 @@ namespace HomeServer_Backend
             m_process.BeginOutputReadLine();
             m_process.BeginErrorReadLine();
 
-            Logger.LogInfo($"Process {m_info.Name} started with PID: {m_process.Id}");
+            Logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
         }
+
 
         public override string ToString()
         {
             return m_info.ToString() + 
                 $"\nRunning: {this.IsRunning}\n" +
+                $"Process Name: {GetProcessName()}\n" +
                 $"Process ID: {m_process.Id}\n" +
                 $"Logger: {(m_logger != null ? "Enabled" : "Disabled")}\n" +
                 $"Logger Path: {(m_logger != null ? m_logger.m_Logs_path : "N/A")}";
