@@ -9,17 +9,45 @@ namespace HomeServer_Backend
 {
     public class Logger
     {
-        private static string m_logPath = Loader.ConfigData.default_config_path;
+
+        private static string m_logPath = Loader.ConfigData.default_log_path;
         private static Logger? m_instance = null;
         private bool WriteToFile = true;
+        private StreamWriter? LogFileWriter;
+        Mutex FileUsageMutex;
         
+
         public static Logger Instance { get {  return GetIntance(); } }
      
         private Logger()
         {
+            FileUsageMutex = new Mutex();
             // TODO: Initialize logging settings here if needed
+            if (WriteToFile)
+            {
+                Directory.CreateDirectory(m_logPath); // Ensure the directory exists
+                try
+                {
+                    LogFileWriter = new StreamWriter(path: $"{m_logPath}/{DateTime.Now:yyyy-MM-dd (HH-mm-ss)}.log", append: true);
+                    LogFileWriter.AutoFlush = true; // Ensure that the log is written immediately
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Failed to open log file at {m_logPath}/{DateTime.Now:yyyy-MM-dd (HH-mm-ss)}.log: {ex.Message}");
+                    LogFileWriter = null;
+                }
+
+            }
         }
 
+        ~Logger()
+        {
+            if (LogFileWriter != null)
+            {
+                LogFileWriter.Close();
+                LogFileWriter.DisposeAsync();
+            }
+        }
 
         private void _LoadFromConfig()
         {
@@ -44,15 +72,23 @@ namespace HomeServer_Backend
         /// Logging core function.
         /// </summary>
         /// <param name="message"></param>
-        private void _Log(string message)
+        private async Task _Log(string message)
         {
             if (!Config.data.EnableLogging)
                 return;
 
             // Write logs
-            // TODO
-            // using (StreamWriter sw = File.AppendText(this.m_logPath))
             Console.WriteLine(message);
+
+            Task.Run(() =>
+            {
+                if (LogFileWriter != null)
+                {
+                    FileUsageMutex.WaitOne(); // Ensure thread safety when writing to the file
+                    LogFileWriter.WriteLine(message);
+                    FileUsageMutex.ReleaseMutex();
+                }
+            });
         }
 
         // Changing Log Vars
