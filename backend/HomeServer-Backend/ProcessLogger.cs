@@ -12,7 +12,14 @@ namespace HomeServer_Backend
         private string m_ProcessName = "HomeServer_Backend";
         private StreamWriter? LogFileWriter;
         private Mutex LogFileMutex;
+
+        private const int MaxLogsInMemory = 25;
+        public Queue<Tuple<DateTime, string>> LastErrors { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last 10 logs
+        public Queue<Tuple<DateTime, string>> LastLogs { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last 10 logs
         
+        private DateTime LastErrorTimestamp = DateTime.MaxValue;
+        private DateTime LastLogTimestamp = DateTime.MaxValue;
+
         public string GetLastLogs()
         {
             if (!LogFileMutex.WaitOne(1000))
@@ -66,11 +73,19 @@ namespace HomeServer_Backend
         /// <param name="message">Log Message</param>
         public void LogInfo(string message)
         {
-            this.M_Log($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {message}");
+            this.P_Log($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {message}");
         }
 
-        private void M_Log(string message)
+        private void P_Log(string message)
         {
+            if (LastLogs.Count >= MaxLogsInMemory)
+            {
+                LastLogs.Dequeue();
+            }
+
+            LastLogs.Enqueue(new Tuple<DateTime, string>(DateTime.Now, message));
+
+
             Console.WriteLine($"({m_ProcessName}) {message}");
 
             if (LogFileWriter != null)
@@ -83,7 +98,15 @@ namespace HomeServer_Backend
 
         public void LogError(string message)
         {
-            this.M_Log( $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR - {message}");
+            string formatedLog = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR - {message}";
+            this.P_Log(formatedLog);
+
+            if (LastErrors.Count >= MaxLogsInMemory)
+            {
+                LastErrors.Dequeue();
+            }
+
+            LastErrors.Enqueue(new Tuple<DateTime, string>(DateTime.Now, formatedLog));
         }
     }
 }

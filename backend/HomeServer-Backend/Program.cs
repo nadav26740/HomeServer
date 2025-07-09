@@ -1,5 +1,6 @@
 ﻿using HomeServer_Backend.Loader;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace HomeServer_Backend
 {
@@ -21,9 +22,21 @@ namespace HomeServer_Backend
             ProcessHandler handler = new ProcessHandler(testinfo);
             handler.StartProcess();
             Logger.LogInfo(handler.ToString());
+
+
             Console.ReadKey();
             Logger.LogInfo("Test Process Memory: " + handler.GetMemoryUsageString() + " bytes");
             Logger.LogInfo("Test Childrens Memory: " + handler.GetChildrensMemoryUsageString());
+            
+            // Testing Get Last Logs
+            var LastLogs = handler.GetLastLogs();
+            Console.WriteLine("============ Reading Last Logs ============");
+            foreach (var log in LastLogs)
+            {
+                Console.WriteLine(log.Item2);
+            }
+            Console.WriteLine("===========================================");
+
             Console.ReadKey();
 
             Logger.LogInfo("Home Server Stopping...");

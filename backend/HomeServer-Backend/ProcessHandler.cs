@@ -277,5 +277,14 @@ namespace HomeServer_Backend
                 $"Logger Path: {(m_logger != null ? m_logger.m_Logs_path : "N/A")}";
         }
 
+        public Queue<Tuple<DateTime, string>> GetLastLogs()
+        {
+            return m_logger != null ? m_logger.LastLogs : new Queue<Tuple<DateTime, string>>(0);
+        }
+
+        public Queue<Tuple<DateTime, string>> GetLastErrors()
+        {
+            return m_logger != null ? m_logger.LastErrors : new Queue<Tuple<DateTime, string>>(0);
+        }
     }
 }
