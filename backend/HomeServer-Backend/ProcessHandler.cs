@@ -60,7 +60,7 @@ namespace HomeServer_Backend
         // Fields
         private ProcessInfo m_info;
         public ProcessInfo Info { get { return m_info; } }
-        private Process m_process;
+        private Process? m_process;
         private ProcessLogger? m_logger;
         public bool IsRunning { get { return m_process != null && !m_process.HasExited; } }
 
@@ -98,22 +98,24 @@ namespace HomeServer_Backend
 
         public long GetMemoryUsage()
         {
-            m_process.Refresh();
             if (m_process == null || m_process.HasExited)
             {
                 throw new InvalidOperationException("Process is not running or has already exited.");
             }
+            
+            m_process.Refresh();
 
             return m_process.WorkingSet64;
         }
 
         public string GetMemoryUsageString()
         {
-            m_process.Refresh();
             if (m_process == null || m_process.HasExited)
             {
                 throw new InvalidOperationException("Process is not running or has already exited.");
             }
+
+            m_process.Refresh();
 
             return m_process.GetMemoryUsageFormated();
         }
@@ -164,7 +166,7 @@ namespace HomeServer_Backend
         {
             // TODO
             m_info = info.Clone();
-            m_process = new Process();
+            m_process = null;
             // throw new Exception("ProcessHandler not implemented yet!");
         }
 
@@ -265,7 +267,6 @@ namespace HomeServer_Backend
             Logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
         }
 
-
         public override string ToString()
         {
             return m_info.ToString() + 
@@ -275,5 +276,6 @@ namespace HomeServer_Backend
                 $"Logger: {(m_logger != null ? "Enabled" : "Disabled")}\n" +
                 $"Logger Path: {(m_logger != null ? m_logger.m_Logs_path : "N/A")}";
         }
+
     }
 }
