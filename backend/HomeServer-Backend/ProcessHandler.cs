@@ -62,7 +62,7 @@ namespace HomeServer_Backend
         public ProcessInfo Info { get { return m_info; } }
         private Process? m_process;
         private ProcessLogger? m_logger;
-        public bool IsRunning { get { return m_process != null && !m_process.HasExited; } }
+        public bool IsRunning { get { return m_process != null && m_process.StartInfo != null && !m_process.HasExited; } }
 
         // Logs
         private void OutputLog(object sender, DataReceivedEventArgs args) 
@@ -234,7 +234,7 @@ namespace HomeServer_Backend
 
         public void StartProcess()
         {
-            if (m_process != null && m_process.HasExited)
+            if (this.IsRunning)
             {
                 throw new InvalidOperationException("Process is already running or has not been stopped properly.");
             }
@@ -272,7 +272,7 @@ namespace HomeServer_Backend
             return m_info.ToString() + 
                 $"\nRunning: {this.IsRunning}\n" +
                 $"Process Name: {GetProcessName()}\n" +
-                $"Process ID: {m_process.Id}\n" +
+                $"Process ID: {m_process?.Id}\n" +
                 $"Logger: {(m_logger != null ? "Enabled" : "Disabled")}\n" +
                 $"Logger Path: {(m_logger != null ? m_logger.m_Logs_path : "N/A")}";
         }
