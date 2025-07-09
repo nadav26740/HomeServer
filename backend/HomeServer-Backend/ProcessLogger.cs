@@ -11,13 +11,31 @@ namespace HomeServer_Backend
         public string m_Logs_path { get; }
         private string m_ProcessName = "HomeServer_Backend";
         private StreamWriter? LogFileWriter;
+        private Mutex LogFileMutex;
         
-        public ProcessLogger(string ProcessName)
+        public string GetLastLogs()
         {
-            Directory.CreateDirectory($"Logs/{ProcessName}"); // Ensure the directory exists
+            if (!LogFileMutex.WaitOne(1000))
+            {
+                throw new Exception("Failed to acquire mutex for log file access.");
+            }
+
+            LogFileMutex.ReleaseMutex();
+            return "";
+        }
+
+        /// <summary>
+        /// Creating Process logger to allow specification of the process's logs.
+        /// </summary>
+        /// <param name="ProcessTag">The Tag name of the process</param>
+        public ProcessLogger(string ProcessTag)
+        {
+            LogFileMutex = new Mutex();
+            
+            Directory.CreateDirectory($"Logs/{ProcessTag}"); // Ensure the directory exists
             // Create a log file with the current date and time
-            this.m_Logs_path = $"Logs/{ProcessName}/{DateTime.Now:yyyy-MM-dd (HH-mm-ss)}.log";
-            m_ProcessName = ProcessName;
+            this.m_Logs_path = $"Logs/{ProcessTag}/{DateTime.Now:yyyy-MM-dd (HH-mm-ss)}.log";
+            m_ProcessName = ProcessTag;
 
             Logger.LogInfo("ProcessLogger initialized with path: " + m_Logs_path);
             
@@ -42,26 +60,30 @@ namespace HomeServer_Backend
             }
         }
 
+        /// <summary>
+        /// Logging info messages to the log file and console.
+        /// </summary>
+        /// <param name="message">Log Message</param>
         public void LogInfo(string message)
         {
-            string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {message}";
-            Console.WriteLine($"({m_ProcessName}) {logMessage}");
-            
+            this.M_Log($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {message}");
+        }
+
+        private void M_Log(string message)
+        {
+            Console.WriteLine($"({m_ProcessName}) {message}");
+
             if (LogFileWriter != null)
             {
-                LogFileWriter.WriteLine(logMessage);
+                LogFileMutex.WaitOne();
+                LogFileWriter.WriteLine(message);
+                LogFileMutex.ReleaseMutex();
             }
         }
 
         public void LogError(string message)
         {
-            string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR - {message}";
-            Console.WriteLine($"({m_ProcessName}) {logMessage}");
-            
-            if (LogFileWriter != null)
-            {
-                LogFileWriter.WriteLine(logMessage);
-            }
+            this.M_Log( $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR - {message}");
         }
     }
 }

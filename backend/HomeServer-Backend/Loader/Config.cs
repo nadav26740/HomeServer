@@ -13,7 +13,7 @@ namespace HomeServer_Backend.Loader
         public const string default_operator_password = "Admin129716";
         public const string default_config_path = "config.json";
         public const string default_data_path = "data.json";
-        public const string default_log_path = "log.txt";
+        public const string default_log_path = "Logs/main";
         public const string default_backup_path = "backup.json";
 
         public ConfigData() 

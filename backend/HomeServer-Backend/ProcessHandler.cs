@@ -24,6 +24,7 @@ namespace HomeServer_Backend
             public Process[] Childrens; // TODO: What to do with it
 
         }
+
         public struct ProcessInfo
         {
             public string Tag;
@@ -39,6 +40,11 @@ namespace HomeServer_Backend
                 Arguments = arguments;
                 WorkingDirectory = workingDirectory;
                 ExitCodeInput = exitCodeInput;
+            }
+
+            public ProcessInfo Clone()
+            {
+                return (ProcessInfo)this.MemberwiseClone();
             }
 
             public override string ToString()
@@ -59,7 +65,7 @@ namespace HomeServer_Backend
         public bool IsRunning { get { return m_process != null && !m_process.HasExited; } }
 
         // Logs
-        private void OutputLog(object sender, DataReceivedEventArgs args)
+        private void OutputLog(object sender, DataReceivedEventArgs args) 
         {
             if (args.Data == null) return;
             if (m_logger != null)
@@ -114,7 +120,7 @@ namespace HomeServer_Backend
 
         public long GetChildrensMemoryUsage()
         {
-            if (m_process == null || m_process.HasExited)
+            if (!this.IsRunning)
             {
                 throw new InvalidOperationException("Process is not running or has already exited.");
             }
@@ -122,7 +128,7 @@ namespace HomeServer_Backend
             long totalMemory = 0;
             try
             {
-                m_logger.LogInfo($"Retrieving child processes memory for PID: {m_process.Id}");
+                m_logger?.LogInfo($"Retrieving child processes memory for PID: {m_process.Id}");
                 foreach (Process obj in this.m_process.GetChildProcesses())
                 {
                     totalMemory += Convert.ToInt64(obj.WorkingSet64);
@@ -157,9 +163,8 @@ namespace HomeServer_Backend
         public ProcessHandler(ProcessInfo info)
         {
             // TODO
-            m_info = info;
+            m_info = info.Clone();
             m_process = new Process();
-
             // throw new Exception("ProcessHandler not implemented yet!");
         }
 
@@ -171,7 +176,7 @@ namespace HomeServer_Backend
         public void StopProcess()
         {
             // TODO 
-            m_logger.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process.Id}");
+            m_logger?.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process.Id}");
             if (IsRunning)
             {
                 if (m_info.ExitCodeInput != null)
@@ -183,19 +188,20 @@ namespace HomeServer_Backend
                 m_process.WaitForExit();
                 m_process.Close();
 
-                m_logger.LogInfo($"Process Closed!");
+                m_logger?.LogInfo($"Process Closed!");
             }
             else
             {
-                m_logger.LogError("Process Already Closed!");
+                m_logger?.LogError("Process Already Closed!");
             }
+
             try
             {
                 m_process.Dispose();
             }
             catch (Exception ex)
             {
-                m_logger.LogError($"Error disposing process: {ex.Message}");
+                m_logger?.LogError($"Error disposing process: {ex.Message}");
             }
             finally
             {
@@ -214,7 +220,7 @@ namespace HomeServer_Backend
 
             if (m_process.StartInfo.RedirectStandardInput)
             {
-                m_logger.LogInfo($"Writing to process: {input}");
+                m_logger?.LogInfo($"Writing to process: {input}");
                 m_process.StandardInput.WriteLine(input);
                 m_process.StandardInput.Flush();
             }
@@ -226,6 +232,13 @@ namespace HomeServer_Backend
 
         public void StartProcess()
         {
+            if (m_process != null && m_process.HasExited)
+            {
+                throw new InvalidOperationException("Process is already running or has not been stopped properly.");
+            }
+
+            m_process = new Process();
+
             m_process.StartInfo = new ProcessStartInfo
             {
                 FileName = m_info.Path,

@@ -49,7 +49,7 @@ namespace HomeServer_Backend
             }
         }
 
-        private void _LoadFromConfig()
+        private void P_LoadFromConfig()
         {
             // TODO: loading settings from config
         }
@@ -72,7 +72,7 @@ namespace HomeServer_Backend
         /// Logging core function.
         /// </summary>
         /// <param name="message"></param>
-        private async Task _Log(string message)
+        private async void P_Log(string message)
         {
             if (!Config.data.EnableLogging)
                 return;
@@ -80,7 +80,7 @@ namespace HomeServer_Backend
             // Write logs
             Console.WriteLine(message);
 
-            Task.Run(() =>
+            await Task.Run(() =>
             {
                 if (LogFileWriter != null)
                 {
@@ -121,39 +121,39 @@ namespace HomeServer_Backend
 
         // Loggers Types
         // Log info
-        private void _LogInfo(string message)
+        private void P_LogInfo(string message)
         {
             string logMessage = $"[{DateTime.Now.ToString()}] Info: {message}";        
-            this._Log(logMessage);
+            this.P_Log(logMessage);
         }
 
         public static void LogInfo(string message)
         {
-            GetIntance()._LogInfo(message);
+            GetIntance().P_LogInfo(message);
         }
 
         // Warn Info
-        private void _LogWarn(string message)
+        private void P_LogWarn(string message)
         {
             string logMessage = $"[{DateTime.Now.ToString()}] Warn: {message}";
-            this._Log(logMessage);
+            this.P_Log(logMessage);
         }
 
         public static void LogWarn(string message)
         {
-            GetIntance()._LogWarn(message);
+            GetIntance().P_LogWarn(message);
         }   
 
         // Error Info
-        private void _LogError(string message)
+        private void P_LogError(string message)
         {
             string logMessage = $"[{DateTime.Now.ToString()}] Error: {message}";
-            this._Log(logMessage);
+            this.P_Log(logMessage);
         }
 
         public static void LogError(string message)
         {
-            GetIntance()._LogError(message);
+            GetIntance().P_LogError(message);
         }
     }
 }

@@ -22,6 +22,10 @@ namespace HomeServer_Backend
             handler.StartProcess();
             Logger.LogInfo(handler.ToString());
             Console.ReadKey();
+            Logger.LogInfo("Test Process Memory: " + handler.GetMemoryUsageString() + " bytes");
+            Logger.LogInfo("Test Childrens Memory: " + handler.GetChildrensMemoryUsageString());
+            Console.ReadKey();
+
             Logger.LogInfo("Home Server Stopping...");
             handler.StopProcess();
         }
