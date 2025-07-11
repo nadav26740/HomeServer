@@ -177,8 +177,14 @@ namespace HomeServer_Backend
 
         public void StopProcess()
         {
+            if (m_process == null)
+            {
+                m_logger?.LogError("Process is not running or has already exited.");
+                return;
+            }
+
             // TODO 
-            m_logger?.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process.Id}");
+            m_logger?.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process?.Id}");
             if (IsRunning)
             {
                 if (m_info.ExitCodeInput != null)
@@ -186,9 +192,9 @@ namespace HomeServer_Backend
                     WriteToProcess(m_info.ExitCodeInput);
                 }
 
-                m_process.Kill();
-                m_process.WaitForExit();
-                m_process.Close();
+                m_process?.Kill();
+                m_process?.WaitForExit();
+                m_process?.Close();
 
                 m_logger?.LogInfo($"Process Closed!");
             }
@@ -199,7 +205,7 @@ namespace HomeServer_Backend
 
             try
             {
-                m_process.Dispose();
+                m_process?.Dispose();
             }
             catch (Exception ex)
             {
