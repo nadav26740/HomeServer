@@ -21,6 +21,11 @@ namespace HomeServer_Backend
         Thread m_Supervisor_Thread;
         bool Running = true;
 
+        /// <summary>
+        /// Indicates if the manager is running and supervising processes.
+        /// </summary>
+        public bool ManagerStatus {  get { return Running; } }
+
         Mutex ManagerCommandMutex;
 
         public ProcessesManager()
@@ -29,6 +34,7 @@ namespace HomeServer_Backend
             ProcessMap = new Dictionary<string, ProcessSlave>();
             m_Supervisor_Thread = new Thread(new ThreadStart(this.Supervising));
             m_Supervisor_Thread.Start();
+            Logger.LogInfo($"Process Manager Started on memory ${this}");
         }
 
         ~ProcessesManager()
@@ -45,12 +51,12 @@ namespace HomeServer_Backend
         /// Will also start the core processes no matter what
         /// </summary>
         /// <param name="StartAllProcess">Will start all processes above this level</param>
-        public void ForceStart(ProcessPriority minimumPriorityToStart = ProcessPriority.Core)
+        public bool ForceStart(ProcessPriority minimumPriorityToStart = ProcessPriority.Core)
         {
             if (ManagerCommandMutex.WaitOne(1000) == false)
             {
                 Logger.LogError("Failed to acquire mutex for ProcessesManager ForceStart command.");
-                return;
+                return false;
             }
 
             this.Shutdown(true);
@@ -59,20 +65,22 @@ namespace HomeServer_Backend
             m_Supervisor_Thread = new Thread(new ThreadStart(this.Supervising));
             m_Supervisor_Thread.Start();
             ManagerCommandMutex.ReleaseMutex();
+            
+            return true;
         }
 
         /// <summary>
         /// Stopping all the owned processes and shutdown the manager supervisor thread.
         /// </summary>
-        public void Shutdown(bool force = false)
+        public bool Shutdown(bool force = false)
         {
             if (!force && ManagerCommandMutex.WaitOne(1000) == false)
             {
                 Logger.LogError("Failed to acquire mutex for ProcessesManager ForceStart command.");
-                return;
+                return false;
             }
 
-            Logger.LogInfo("Processes Manager Shutdown requested, stopping all processes and supervisor thread...");
+            Logger.LogWarn("Processes Manager Shutdown requested, stopping all processes and supervisor thread...");
             Running = false;
 
             // Stopping all processes
@@ -81,11 +89,11 @@ namespace HomeServer_Backend
                 try
                 {
                     process.AutoStart = false;
-                    process.Handler.StopProcess();
+                    process.ProcessHandler.StopProcess();
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"Failed to stop process \"{process.Handler.Info.Tag}\": {ex.Message}");
+                    Logger.LogError($"Failed to stop process \"{process.ProcessHandler.Info.Tag}\": {ex.Message}");
                 }
             }
 
@@ -95,12 +103,59 @@ namespace HomeServer_Backend
                 m_Supervisor_Thread.Join();
             }
 
-            Logger.LogInfo("Processes Manager Shutdown completed.");
+            Logger.LogWarn("Processes Manager Shutdown completed.");
 
             if (!force)
             {
                 ManagerCommandMutex.ReleaseMutex(); 
             }
+            return true;
+        }
+
+        /// <summary>
+        /// Adding Process Slave to the manager.
+        /// </summary>
+        /// <param name="slave">Slave owning a process to add to manager</param>
+        /// <returns>False if failed to add, True if added successfuly</returns>
+        public bool AddProcess(ProcessSlave slave)
+        {
+            if (slave == null) { return false; }
+
+            // Locking mutex to ensure thread safety when adding a process
+            if (ManagerCommandMutex.WaitOne(1000) == false)
+            {
+                Logger.LogError("Failed to acquire mutex for ProcessesManager AddProcess command.");
+                return false;
+            }
+
+            ProcessHandler handler = slave.ProcessHandler;
+
+            try
+            {
+                // checking if the process with this tag already exists
+                if (ProcessMap.ContainsKey(handler.Info.Tag))
+                {
+                    Logger.LogError($"Failed To add process \"{handler.Info.Tag}\" Already exists process with that tag");
+                    return false;
+                }
+
+                // Adding Process
+                ProcessMap.Add(handler.Info.Tag, slave);
+                Logger.LogInfo($"process \"{handler.Info.Tag}\" added succesfuly");
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Failed to add process \"{handler.Info.Tag}\": {ex.Message}");
+                ManagerCommandMutex.ReleaseMutex();
+                return false;
+            }
+
+            // Releasing Mutex
+            ManagerCommandMutex.ReleaseMutex();
+            return true;
+            
         }
 
         /// <summary>
@@ -158,14 +213,18 @@ namespace HomeServer_Backend
             try
             {
 
-                if (!ProcessMap.ContainsKey(tag))
+                if (!ProcessMap.TryGetValue(tag, out var procSlave))
                 {
                     Logger.LogError($"Failed To Remove Process \"{tag}\" (Process not found)");
                     return false;
                 }
 
+                // Making sure autostart is off before removing the process
+                procSlave.AutoStart = false;
+
+                // If ShutdownFirst is true, stop the process before removing it
                 if (ShutdownFirst)
-                    ProcessMap[tag].Handler.StopProcess();
+                    procSlave.ProcessHandler.StopProcess();
 
                 ProcessMap.Remove(tag);
                 Logger.LogInfo($"Process \"{tag}\" removed successfuly");
@@ -181,7 +240,9 @@ namespace HomeServer_Backend
             return true;
         }
 
-        // NEED TO BE TESTED!
+        /// <summary>
+        /// Running "ticks" that will check all processes and their status.
+        /// </summary>
         void Supervising()
         {
             Logger.LogInfo("Process manager Supervisor Started");
@@ -193,6 +254,18 @@ namespace HomeServer_Backend
                }
                 Thread.Sleep((int)Supervised_per_Millisecond);
             }
+        }
+
+        /// <summary>
+        /// Getting ProcessSlave by its tag.
+        /// </summary>
+        /// <param name="Tag">Tag name of the process</param>
+        /// <returns>Process Slave containing the process with that Tag or null if failed to find</returns>
+        public ProcessSlave? FindProcess(string Tag)
+        {
+            if (ProcessMap.TryGetValue(Tag, out var process))
+                return process;
+            return null;
         }
     }
 }

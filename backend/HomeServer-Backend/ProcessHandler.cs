@@ -144,6 +144,24 @@ namespace HomeServer_Backend
             return totalMemory;
         }
 
+        public long GetTotalMemoryUsage()
+        {
+            if (!this.IsRunning)
+            {
+                Logger.LogError($"Failed To Get Total Memory Usage of {this.m_info.Tag} Process is not running or has already exited.");
+                throw new InvalidOperationException("Process is not running or has already exited.");
+            }
+
+            long totalMemory = GetMemoryUsage() + GetChildrensMemoryUsage();
+            // m_logger?.LogInfo($"Total memory usage for PID {m_process.Id}: {totalMemory} bytes");
+            return totalMemory;
+        }
+
+        public string GetTotalMemoryUsageString()
+        {
+            return ProcessExtensions.BytesToFormatedString(GetTotalMemoryUsage());
+        }
+
         public string GetChildrensMemoryUsageString()
         {
             return ProcessExtensions.BytesToFormatedString(GetChildrensMemoryUsage());

@@ -48,26 +48,38 @@ namespace HomeServer_Backend
         // GEN 2 debug
         static void Main(string[] args)
         {
-            ProcessesManager manager = new ProcessesManager();
-            
-            ProcessHandler.ProcessInfo testinfo = new ProcessHandler.ProcessInfo(
-                "TestProcess",
+            ProcessSlaveArgs SlaveInfoContainer = new ProcessSlaveArgs();
+
+            SlaveInfoContainer.AutoStart = true;
+            SlaveInfoContainer.ProcessInfo  = new ProcessHandler.ProcessInfo(
+                "Minecraft Server",
                 "java.exe",
                 "-Xmx4096M -Xms1024M -jar minecraft_server.1.21.4.jar nogui",
                 "D:\\dumb minecraft servers\\",
                 "stop"
             );
-            ProcessHandler handler = new ProcessHandler(testinfo);
-            handler.StartProcess(); // Start the process
 
-            manager.AddProcess(handler);
+            SlaveInfoContainer.Priority = ProcessesManager.ProcessPriority.Core;
+
+            Console.WriteLine($"Slave to test: {SlaveInfoContainer.DeserilizeToJson()}");
+
+
+            Console.WriteLine("Press Any Key to start test");
+            Console.ReadKey();
+
+            ProcessesManager manager = new ProcessesManager();
+            manager.AddProcess(SlaveInfoContainer.CreateProcessSlave());
 
             Console.ReadKey();
-            handler.StopProcess(); // Stop the process
+
+            ProcessesManager.ProcessSlave? slave = manager.FindProcess(SlaveInfoContainer.ProcessInfo.Tag);
+            Logger.LogInfo($"Minecraft server Ram usage: {slave?.ProcessHandler.GetTotalMemoryUsageString()}");
+            slave.ProcessHandler.StopProcess();
+
             Console.ReadKey();
 
             Logger.LogInfo("Testprocess stop");
-            manager.RemoveProcess("TestProcess", true);
+            manager.RemoveProcess("Minecraft Server", true);
             Logger.LogInfo("Home Server Stopping...");
             manager.Shutdown();
         }

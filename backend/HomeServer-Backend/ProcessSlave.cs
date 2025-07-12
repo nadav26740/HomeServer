@@ -8,12 +8,12 @@ namespace HomeServer_Backend
 {
     public partial class ProcessesManager
     {
-        public enum ProcessPriority
+        public enum ProcessPriority : Int16
         {
-            Core,
-            High,
+            Low,
             Normal,
-            Low
+            High,
+            Core, // Core processes that should always run
         }
 
         public class ProcessSlave
@@ -29,7 +29,7 @@ namespace HomeServer_Backend
             }
 
             public ProcessPriority Proc_Priority { get; set; }
-            public ProcessHandler Handler { get; }
+            public ProcessHandler ProcessHandler { get; }
 
             public event EventHandler? OnProcessStarted;
             public bool ProcessRunning { get; private set; }
@@ -59,11 +59,19 @@ namespace HomeServer_Backend
                     if (AutoStartCooldown > DateTime.Now)
                         return;
                     
-                    if (!Handler.IsRunning)
+                    if (!ProcessHandler.IsRunning)
                     {
-                        Logger.LogWarn($"AutoStart Triggered in Process \"{Handler.Info.Tag}\"");
+                        Logger.LogWarn($"AutoStart Triggered in Process \"{ProcessHandler.Info.Tag}\"");
                         AutoStartCooldown = DateTime.Now.AddSeconds(AutoStartCooldownSeconds); // Cooldown for 5 seconds before next auto start attempt
-                        Handler.StartProcess();
+                        try
+                        {
+                            ProcessHandler.StartProcess();
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError($"Failed to auto start process \"{ProcessHandler.Info.Tag}\": {ex.Message}");
+                            Logger.LogWarn($"Attempting to restart process \"{ProcessHandler.Info.Tag}\" in {AutoStartCooldownSeconds} seconds.");
+                        }
                     }
                 }
             }
@@ -71,7 +79,7 @@ namespace HomeServer_Backend
             public ProcessSlave(ProcessHandler handler, bool AutoStart = false, ProcessPriority priority = ProcessPriority.Normal)
             {
                 this.AutoStart = AutoStart;
-                Handler = handler;
+                ProcessHandler = handler;
                 Proc_Priority = priority;
                 ProcessRunning = handler.IsRunning;
             }
@@ -84,10 +92,17 @@ namespace HomeServer_Backend
                 AutoStartTrigger();
 
                 // Process Start Stop event checking
-                if (ProcessRunning != Handler.IsRunning)
+                if (ProcessRunning != ProcessHandler.IsRunning)
                 {
                     if (ProcessRunning)
                     {
+                        AutoStartCooldown = DateTime.Now.AddSeconds(AutoStartCooldownSeconds);
+
+                        if (Proc_Priority == ProcessPriority.Core)
+                        {
+                            Logger.LogError($"Process \"{ProcessHandler.Info.Tag}\" has stopped but it is a core process, it should not stop! {(AutoStart ? $"Attempting to restart in {AutoStartCooldownSeconds} seconds." : "Auto Start off manual restart required!")}");
+                        }
+
                         ProcessRunning = false;
                         OnProcessStopped?.Invoke(this, EventArgs.Empty);
                     }
@@ -99,7 +114,7 @@ namespace HomeServer_Backend
                 }
 
                 // Logs Event Checking
-                var lastLogs = Handler.GetLastLogs().ToArray();
+                var lastLogs = ProcessHandler.GetLastLogs().ToArray();
                 if (lastLogs.Length > 0)
                 {
                     DateTime lastLOgTime = lastLogs.Last().Item1;
@@ -113,7 +128,7 @@ namespace HomeServer_Backend
                 }
 
                 // Error Event checking
-                lastLogs = Handler.GetLastErrors().ToArray();
+                lastLogs = ProcessHandler.GetLastErrors().ToArray();
                 if (lastLogs?.Length > 0 && lastLogs?.Last().Item1 > LastLogTimeStamp)
                 {
                     LastLogTimeStamp = lastLogs.Last().Item1;
