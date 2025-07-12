@@ -55,6 +55,15 @@ namespace HomeServer_Backend
                     $"Working Directory: {WorkingDirectory}" +
                     (ExitCodeInput != null ? $"\nExit Code Input: {ExitCodeInput}" : "");
             }
+
+            public string DeserilizeToJson() => 
+                "{\n" + 
+                    $"\t\"{nameof(Tag)}\": \"{Tag}\", \n" +
+                $"\t\"{nameof(Path)}\": \"{Path}\", \n" +
+                $"\t\"{nameof(Arguments)}\": \"{Arguments}\", \n" +
+                $"\t\"{nameof(WorkingDirectory)}\": \"{WorkingDirectory.Replace('\\', '/')}\", \n" +
+                $"\t\"{nameof(ExitCodeInput)}\": {(ExitCodeInput != null ? $"\"{ExitCodeInput}\"" : "")} \n" +
+                "}";
         }
 
         // Fields

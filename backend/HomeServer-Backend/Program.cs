@@ -61,7 +61,8 @@ namespace HomeServer_Backend
 
             SlaveInfoContainer.Priority = ProcessesManager.ProcessPriority.Core;
 
-            Console.WriteLine($"Slave to test: {SlaveInfoContainer.DeserilizeToJson()}");
+            Console.WriteLine($"Slave to test: {SlaveInfoContainer.ToString()}");
+            Console.WriteLine($"Slave To test json: {SlaveInfoContainer.DeserilizeToJson()}");
 
 
             Console.WriteLine("Press Any Key to start test");

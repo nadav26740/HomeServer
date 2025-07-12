@@ -17,7 +17,16 @@ namespace HomeServer_Backend
         // fast deserilize to json
         public string DeserilizeToJson()
         {
-            return $"{{{nameof(Priority)}:{Priority}, {nameof(ProcessInfo)}:TODO, {nameof(AutoStart)}: {AutoStart}}}";
+            return "{ \n" + 
+                        $"\t\"{nameof(Priority)}\": {(Int16)Priority}, \n" + 
+                        $"\t\"{nameof(ProcessInfo)}\":{ProcessInfo.DeserilizeToJson()}, \n" +
+                        $"\t\"{nameof(AutoStart)}\": {(AutoStart ? "true" : "false")}\n" + 
+                    "}";
+        }
+
+        public override string ToString()
+        {
+            return $"{ProcessInfo.ToString()}\nPriority: {Priority}\nAutoStart: {AutoStart}";
         }
     }
 }
