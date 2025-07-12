@@ -124,6 +124,7 @@ namespace HomeServer_Backend
         // Log info
         private void P_LogInfo(string message)
         {
+            Console.ForegroundColor = ConsoleColor.Green;
             string logMessage = $"[{DateTime.Now.ToString()}] Info: {message}";        
             this.P_Log(logMessage);
         }

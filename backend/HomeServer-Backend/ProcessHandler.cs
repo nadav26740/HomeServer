@@ -12,8 +12,6 @@ namespace HomeServer_Backend
 {
     public class ProcessHandler
     {
-        
-
         public struct ProcessRunningData
         {
             public string ProcessName;
@@ -71,7 +69,18 @@ namespace HomeServer_Backend
         public ProcessInfo Info { get { return m_info; } }
         private Process? m_process;
         private ProcessLogger? m_logger;
-        public bool IsRunning { get { return m_process != null && m_process.StartInfo != null && !m_process.HasExited; } }
+
+        public bool IsRunning { 
+            get { 
+                try 
+                { 
+                    return m_process != null && m_process.StartInfo != null && !m_process.HasExited; 
+                } 
+                catch // if error occur while checking just return false
+                { 
+                    m_logger?.LogError($"Error checking if process {m_info.Tag} is running: {m_process?.StartInfo.FileName}");
+                    return false; 
+                } } }
 
         // Logs
         private void OutputLog(object sender, DataReceivedEventArgs args) 
@@ -291,14 +300,20 @@ namespace HomeServer_Backend
             m_logger = new ProcessLogger(m_info.Tag);
             m_process.OutputDataReceived += OutputLog;
             m_process.ErrorDataReceived += OutputError;
+            m_process.Exited += ProcessExitedEvent;
 
             // Starting Process
             m_process.Start();
             m_process.BeginOutputReadLine();
             m_process.BeginErrorReadLine();
 
-            Logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
+            m_logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
         }
+
+        private void ProcessExitedEvent(object? sender, EventArgs e)
+        {
+            m_logger?.LogError($"Process {m_process?.ProcessName} Exited!");
+         }
 
         public override string ToString()
         {

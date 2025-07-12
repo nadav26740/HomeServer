@@ -102,12 +102,17 @@ namespace HomeServer_Backend
                         {
                             Logger.LogError($"Process \"{ProcessHandler.Info.Tag}\" has stopped but it is a core process, it should not stop! {(AutoStart ? $"Attempting to restart in {AutoStartCooldownSeconds} seconds." : "Auto Start off manual restart required!")}");
                         }
+                        else
+                        {
+                            Logger.LogWarn($"Process \"{ProcessHandler.Info.Tag}\" (Priority: {Proc_Priority}) has stopped. {(AutoStart ? $"Attempting to restart in {AutoStartCooldownSeconds} seconds." : "")}");
+                        }
 
                         ProcessRunning = false;
                         OnProcessStopped?.Invoke(this, EventArgs.Empty);
                     }
                     else
                     {
+                        Logger.LogInfo($"Process \"{ProcessHandler.Info.Tag}\" (Priority: {Proc_Priority}) has started.");
                         ProcessRunning = true;
                         OnProcessStarted?.Invoke(this, EventArgs.Empty);
                     }

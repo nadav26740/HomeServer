@@ -6,6 +6,9 @@ namespace HomeServer_Backend
 {
     internal class Program
     {
+        private static string GetSplashMessage() => "  _   _                        ____                           \r\n | | | | ___  _ __ ___   ___  / ___|  ___ _ ____   _____ _ __ \r\n | |_| |/ _ \\| '_ ` _ \\ / _ \\ \\___ \\ / _ | '__\\ \\ / / _ | '__|\r\n |  _  | (_) | | | | | |  __/  ___) |  __| |   \\ V |  __| |   \r\n |_| |_|\\___/|_| |_| |_|\\___| |____/ \\___|_|    \\_/ \\___|_|   \r\n                                                              ";
+        
+
         // GEN 1 DEBUG
         //static void Main(string[] args)
         //{
@@ -50,6 +53,8 @@ namespace HomeServer_Backend
         {
             ProcessSlaveArgs SlaveInfoContainer = new ProcessSlaveArgs();
 
+            Console.WriteLine(GetSplashMessage());
+
             SlaveInfoContainer.AutoStart = true;
             SlaveInfoContainer.ProcessInfo  = new ProcessHandler.ProcessInfo(
                 "Minecraft Server",
@@ -66,6 +71,7 @@ namespace HomeServer_Backend
 
 
             Console.WriteLine("Press Any Key to start test");
+            
             Console.ReadKey();
 
             ProcessesManager manager = new ProcessesManager();
@@ -82,7 +88,7 @@ namespace HomeServer_Backend
             Logger.LogInfo("Testprocess stop");
             manager.RemoveProcess("Minecraft Server", true);
             Logger.LogInfo("Home Server Stopping...");
-            manager.Shutdown();
+            manager.Shutdown(true);
         }
     }
 }
