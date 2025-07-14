@@ -6,7 +6,6 @@ using System.Management;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 namespace HomeServer_Backend
 {
@@ -69,16 +68,22 @@ namespace HomeServer_Backend
         public ProcessInfo Info { get { return m_info; } }
         private Process? m_process;
         private ProcessLogger? m_logger;
+        private bool Started = false; // by using that we don't need to check when we know thre is no chance the process running
 
         public bool IsRunning { 
-            get { 
+            get {   
                 try 
-                { 
-                    return m_process != null && m_process.StartInfo != null && !m_process.HasExited; 
+                {
+                    // IF not started for sure isn't running
+                    if (!Started)
+                        return false;
+
+                    Started = m_process != null && !m_process.HasExited;
+                    return Started;
                 } 
-                catch // if error occur while checking just return false
+                catch (Exception ex)// if error occur while checking just return false
                 { 
-                    m_logger?.LogError($"Error checking if process {m_info.Tag} is running: {m_process?.StartInfo.FileName}");
+                    m_logger?.LogError($"Error checking if process {m_info.Tag} is running: {ex.Message}");
                     return false; 
                 } } }
 
@@ -148,8 +153,8 @@ namespace HomeServer_Backend
             long totalMemory = 0;
             try
             {
-                m_logger?.LogInfo($"Retrieving child processes memory for PID: {m_process.Id}");
-                foreach (Process obj in this.m_process.GetChildProcesses())
+                m_logger?.LogInfo($"Retrieving child processes memory for PID: {m_process?.Id}");
+                foreach (Process obj in this.m_process?.GetChildProcesses())
                 {
                     totalMemory += Convert.ToInt64(obj.WorkingSet64);
                 }
@@ -167,7 +172,8 @@ namespace HomeServer_Backend
             if (!this.IsRunning)
             {
                 Logger.LogError($"Failed To Get Total Memory Usage of {this.m_info.Tag} Process is not running or has already exited.");
-                throw new InvalidOperationException("Process is not running or has already exited.");
+                return -1;
+                // throw new InvalidOperationException("Process is not running or has already exited.");
             }
 
             long totalMemory = GetMemoryUsage() + GetChildrensMemoryUsage();
@@ -220,9 +226,9 @@ namespace HomeServer_Backend
             }
 
             // TODO 
-            m_logger?.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process?.Id}");
             if (IsRunning)
             {
+                m_logger?.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process?.Id}");
                 if (m_info.ExitCodeInput != null)
                 {
                     WriteToProcess(m_info.ExitCodeInput);
@@ -308,6 +314,7 @@ namespace HomeServer_Backend
             m_process.BeginErrorReadLine();
 
             m_logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
+            Started = true;
         }
 
         private void ProcessExitedEvent(object? sender, EventArgs e)
