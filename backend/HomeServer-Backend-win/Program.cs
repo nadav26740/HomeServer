@@ -1,4 +1,5 @@
-﻿using HomeServer_Backend.Loader;
+﻿using HomeServer_Backend.Communication;
+using HomeServer_Backend.Loader;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -52,7 +53,8 @@ namespace HomeServer_Backend
         static void Main(string[] args)
         {
             ProcessSlaveArgs SlaveInfoContainer = new ProcessSlaveArgs();
-
+            SimpleTcpServer SimpleServer = new SimpleTcpServer(9939);
+            
             Console.WriteLine(GetSplashMessage());
 
             SlaveInfoContainer.AutoStart = true;
@@ -72,11 +74,16 @@ namespace HomeServer_Backend
 
             Console.WriteLine("Press Any Key to start test");
             
+            // Starting Test
             Console.ReadKey();
+            Logger.LogInfo("Starting Logger..");
+            Logger.LogInfo("Starting HomeServer Test!");
 
             ProcessesManager manager = new ProcessesManager();
             manager.AddProcess(SlaveInfoContainer.CreateProcessSlave());
+            Task.Run(SimpleServer.StartAsync);
 
+            // Testing Failure Recovery
             Console.ReadKey();
 
             ProcessesManager.ProcessSlave? slave = manager.FindProcess(SlaveInfoContainer.ProcessInfo.Tag);
@@ -85,9 +92,11 @@ namespace HomeServer_Backend
 
             Console.ReadKey();
 
+            // Testing Shutdown
             Logger.LogInfo("Testprocess stop");
             manager.RemoveProcess("Minecraft Server", true);
             Logger.LogInfo("Home Server Stopping...");
+            SimpleServer.StopAsync();
             manager.Shutdown(true);
         }
     }
