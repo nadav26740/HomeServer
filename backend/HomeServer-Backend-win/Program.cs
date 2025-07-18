@@ -110,7 +110,7 @@ namespace HomeServer_Backend
             Logger.LogInfo("Testprocess stop");
             manager.RemoveProcess("Minecraft Server", true);
             Logger.LogInfo("Home Server Stopping...");
-            SimpleServer.StopAsync();
+            SimpleServer.Stop();
             manager.Shutdown(true);
         }
     }

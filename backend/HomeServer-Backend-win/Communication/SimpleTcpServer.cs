@@ -14,7 +14,7 @@ namespace HomeServer_Backend.Communication
 {
     public class SimpleTcpServer
     {
-        public delegate string ClientMessageHandler(string message);
+        public delegate ServerMessageFormat ClientMessageHandler(ClientMessageFormat message);
 
         public ClientMessageHandler? ClientMessageResponder;
 
@@ -92,7 +92,7 @@ namespace HomeServer_Backend.Communication
             }
         }
 
-        public void StopAsync() { Running = false; _listener.Stop(); }
+        public void Stop() { Running = false; _listener.Stop(); }
 
         private async Task HandleClientAsync(TcpClient client)
         {
@@ -110,10 +110,12 @@ namespace HomeServer_Backend.Communication
                     while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                     {
                         string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                        Logger.LogInfo($"(Client {ClientRemoteEndPoint}) Received: {message} ");
+                        ClientMessageFormat messageFormated = Newtonsoft.Json.JsonConvert.DeserializeObject<ClientMessageFormat>(message) ?? new ClientMessageFormat { Data = message, Type = "unknown" };
+
+                        Logger.LogInfo($"{{ \"IP\": \"{ClientRemoteEndPoint}\" ,\"message\":{messageFormated} }}");
 
                         // Echo back the message
-                        message = ClientMessageResponder?.Invoke(message) ?? "503 Service Unavailable";
+                        message = ClientMessageResponder?.Invoke(messageFormated).SerilizeToJson() ?? new ServerMessageFormat().SerilizeToJson();
                         byte[] response = Encoding.UTF8.GetBytes(message);
                         await stream.WriteAsync(response, 0, response.Length);
                         Logger.LogInfo($"(Client {ClientRemoteEndPoint}) Response sent: {message}");
