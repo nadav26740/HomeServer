@@ -10,35 +10,40 @@ namespace HomeServer_Backend.Loader
     public struct ConfigData
     {
         // Default paths
-        public const string default_operator_password = "Admin129716";
-        public const string default_config_path = "config.json";
-        public const string default_data_path = "data.json";
-        public const string default_log_path = "Logs/main";
-        public const string default_backup_path = "backup.json";
-
+        private const string default_operator_password = "Admin129716";
+        private const string default_config_path = "config.json";
+        private const string default_Process_data_path = "Processes.json";
+        private const string default_log_path = "Logs/main";
+        private const string default_backup_path = "backup.json";
+        private const int default_server_port = 3391;
         public ConfigData() 
         {
         }
 
         public string ConfigPath = default_config_path;
-        public string DataPath  = default_data_path;
+        public string DataPath  = default_Process_data_path;
         public string LogPath  = default_log_path;
         public string BackupPath  = default_backup_path;
         public string OperatorPassword  = default_operator_password;
         public bool EnableLogging  = true;
+        public int ServerPort = default_server_port;
 
         public override readonly string ToString()
         {
-            return $"ConfigData:\n" +
-                   $"  ConfigPath: {ConfigPath}\n" +
-                   $"  DataPath: {DataPath}\n" +
-                   $"  LogPath: {LogPath}\n" +
-                   $"  BackupPath: {BackupPath}\n" +
-                   $"  OperatorPassword: {OperatorPassword}\n" +
-                   $"  EnableLogging: {EnableLogging}";
+            return $"======Config Data======\n" +
+                   $"  Config Path: {ConfigPath}\n" +
+                   $"  Data Path: {DataPath}\n" +
+                   $"  Log Path: {LogPath}\n" +
+                   $"  Backup Path: {BackupPath}\n" +
+                   $"  Operator Password: {OperatorPassword}\n" +
+                   $"  Enable Logging: {EnableLogging}\n" +
+                   $"  Server Port: {ServerPort}";
         }
     }
 
+    /// <summary>
+    /// This config is a singleton
+    /// </summary>
     public class Config
     {
         private ConfigData _configData = new ConfigData();

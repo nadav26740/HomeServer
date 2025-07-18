@@ -10,7 +10,7 @@ namespace HomeServer_Backend
     public class Logger
     {
 
-        private static string m_logPath = Loader.ConfigData.default_log_path;
+        private static string m_logPath = Loader.Config.data.LogPath;
         private static Logger? m_instance = null;
         private bool WriteToFile = true;
         private StreamWriter? LogFileWriter;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,10 +11,10 @@ namespace HomeServer_Backend
     {
         public enum ProcessPriority : Int16
         {
-            Low,
-            Normal,
-            High,
-            Core, // Core processes that should always run
+           Core,
+           High,
+           Normal,
+           Low
         }
 
         public class ProcessSlave
@@ -82,6 +83,8 @@ namespace HomeServer_Backend
                 ProcessHandler = handler;
                 Proc_Priority = priority;
                 ProcessRunning = handler.IsRunning;
+
+                Console.WriteLine($"TESt: {JsonConvert.SerializeObject(this, Formatting.Indented)}");
             }
 
             /// <summary>

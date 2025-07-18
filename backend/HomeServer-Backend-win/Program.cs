@@ -52,41 +52,55 @@ namespace HomeServer_Backend
         // GEN 2 debug
         static void Main(string[] args)
         {
-            ProcessSlaveArgs SlaveInfoContainer = new ProcessSlaveArgs();
+            ProcessSlaveArgs SlaveInfoContainer;
             SimpleTcpServer SimpleServer = new SimpleTcpServer(9939);
             
             Console.WriteLine(GetSplashMessage());
 
-            SlaveInfoContainer.AutoStart = true;
-            SlaveInfoContainer.ProcessInfo  = new ProcessHandler.ProcessInfo(
-                "Minecraft Server",
-                "java.exe",
-                "-Xmx4096M -Xms1024M -jar minecraft_server.1.21.4.jar nogui",
-                "D:\\dumb minecraft servers\\",
-                "stop"
-            );
+            //SlaveInfoContainer.AutoStart = true;
+            //SlaveInfoContainer.ProcessInfo  = new ProcessHandler.ProcessInfo(
+            //    "Minecraft Server",
+            //    "java.exe",
+            //    "-Xmx4096M -Xms1024M -jar minecraft_server.1.21.4.jar nogui",
+            //    "D:\\dumb minecraft servers\\",
+            //    "stop"
+            //);
 
-            SlaveInfoContainer.Priority = ProcessesManager.ProcessPriority.Core;
+            //SlaveInfoContainer.Priority = ProcessesManager.ProcessPriority.Core;
 
-            Console.WriteLine($"Slave to test: {SlaveInfoContainer.ToString()}");
-            Console.WriteLine($"Slave To test json: {SlaveInfoContainer.DeserilizeToJson()}");
+            //Console.WriteLine($"Slave to test: {SlaveInfoContainer.ToString()}");
+            //Console.WriteLine($"Slave To test json: {SlaveInfoContainer.DeserilizeToJson()}");
 
 
             Console.WriteLine("Press Any Key to start test");
             
             // Starting Test
             Console.ReadKey();
+            Logger.LogInfo("Reading Process Config File...");
+            
             Logger.LogInfo("Starting Logger..");
             Logger.LogInfo("Starting HomeServer Test!");
 
             ProcessesManager manager = new ProcessesManager();
-            manager.AddProcess(SlaveInfoContainer.CreateProcessSlave());
+
+            foreach (var procs in ProcessConfigSave.ReadSlaveProcessData(Config.data.DataPath))
+            {
+                manager.AddProcess(procs.CreateProcessSlave());
+            }
+
             Task.Run(SimpleServer.StartAsync);
+
+            // Testing Save System 
+            Console.ReadKey();
+
+            Logger.LogInfo("Saving Process Data...");
+            manager.SaveSlaveProcessData(Config.data.DataPath);
 
             // Testing Failure Recovery
             Console.ReadKey();
 
-            ProcessesManager.ProcessSlave? slave = manager.FindProcess(SlaveInfoContainer.ProcessInfo.Tag);
+
+            ProcessesManager.ProcessSlave? slave = manager.FindProcess("Minecraft Server");
             Logger.LogInfo($"Minecraft server Ram usage: {slave?.ProcessHandler.GetTotalMemoryUsageString()}");
             slave.ProcessHandler.StopProcess();
 

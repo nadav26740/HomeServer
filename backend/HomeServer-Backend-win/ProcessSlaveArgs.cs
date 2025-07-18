@@ -12,6 +12,12 @@ namespace HomeServer_Backend
         public ProcessHandler.ProcessInfo ProcessInfo { get; set; }
         public bool AutoStart { get; set; } // If true, the process will be started automatically if it is not running
 
+        // functions
+
+        /// <summary>
+        /// Creating Process slave that the process manager can use
+        /// </summary>
+        /// <returns></returns>
         public ProcessesManager.ProcessSlave CreateProcessSlave() => new ProcessesManager.ProcessSlave(new ProcessHandler(ProcessInfo), AutoStart, Priority);
         
         // fast deserilize to json

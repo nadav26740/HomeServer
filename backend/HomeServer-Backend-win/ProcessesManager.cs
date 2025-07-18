@@ -17,7 +17,7 @@ namespace HomeServer_Backend
         const int Supervised_per_Second = 1; // How many supervise Checks per second
         const float Supervised_per_Millisecond = 1000f / Supervised_per_Second; // How many milliseconds between each supervise check
 
-        Dictionary<string, ProcessSlave> ProcessMap;
+        protected Dictionary<string, ProcessSlave> ProcessMap;
         Thread m_Supervisor_Thread;
         bool Running = true;
 
@@ -44,6 +44,35 @@ namespace HomeServer_Backend
             //if (m_Supervisor_Thread != null && m_Supervisor_Thread.IsAlive)
             //{
             //}
+        }
+
+        public ProcessSlaveArgs[]? ProcessesToSlavesArgs()
+        {
+            if (ProcessMap.Count == 0)
+            {
+                Logger.LogWarn("No processes to convert to ProcessSlaveArgs.");
+                return null;
+            }
+
+            List<ProcessSlaveArgs> processesSlaves = new(ProcessMap.Count);
+
+            foreach (var process in ProcessMap.Values)
+            {
+                if (process == null)
+                {
+                    Logger.LogError("Process is null, cannot convert to ProcessSlaveArgs.");
+                    continue;
+                }
+
+                processesSlaves.Add(new ProcessSlaveArgs
+                {
+                    Priority = process.Proc_Priority,
+                    ProcessInfo = process.ProcessHandler.Info,
+                    AutoStart = process.AutoStart
+                });
+            }
+
+            return processesSlaves.ToArray();
         }
 
         /// <summary>
@@ -155,8 +184,8 @@ namespace HomeServer_Backend
             // Releasing Mutex
             ManagerCommandMutex.ReleaseMutex();
             return true;
-            
         }
+
 
         /// <summary>
         /// Return false if unable to add process
