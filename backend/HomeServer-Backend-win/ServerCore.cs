@@ -37,7 +37,8 @@ namespace HomeServer_Backend
                 Console.WriteLine("Creating default Config");
                 Config.WriteConfigFile();
             }
-            
+
+            Logger.ForceSetLoggingPath(Config.data.LogPath);
 
             Logger.LogInfo("Core Server Starting...");
             m_TcpServer = new(Config.data.ServerPort, SERVER_HOST);
@@ -127,6 +128,12 @@ namespace HomeServer_Backend
                 case "/api/processes/status":
                     return ApiProcessesStatus(message.Data);
 
+                case "/api/processes/lastlogs":
+                    return ApiProcessLastLogs(message.Data);
+
+                case "/api/processes/lasterrors":
+                    return ApiProcessLastErrors(message.Data);
+
                 default:
                     // Handle other GET requests
                     Logger.LogError($"Unknown GET request path: {message.Path} with data: {message.Data}");
@@ -180,12 +187,12 @@ namespace HomeServer_Backend
             {
                 var processes = m_Manager.GetProcesses();
             
-                Logger.LogInfo($"Returning {processes.Length} processes.");
+                Logger.LogInfo($"[ApiProcesses] Returning {processes.Length} processes.");
                 return new() { Data = processes, StatusCode = 200 };
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Error while getting processes: {ex.Message}");
+                Logger.LogError($"[ApiProcesses] Error while getting processes: {ex.Message}");
                 return new() { Data = "Error while getting processes", StatusCode = 500 };
             }
         }
@@ -206,14 +213,60 @@ namespace HomeServer_Backend
                 {
                     status[i] = new ProcessesStatus(processes[i]);
                 }
-                Logger.LogInfo($"Returning {status.Length} processes status.");
+                Logger.LogInfo($"[ApiProcessesStatus] Returning {status.Length} processes status.");
 
                 return new() { Data = status, StatusCode = 200 };
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Error while getting processes status: {ex.Message}");
+                Logger.LogError($"[ApiProcessesStatus] Error while getting processes status: {ex.Message}");
                 return new() { Data = "Error while getting processes status", StatusCode = 500 };
+            }
+        }
+
+        private ServerMessageFormat ApiProcessLastLogs(string data)
+        {
+            try
+            {
+                var process = m_Manager.FindProcess(data);
+                if (process == null)
+                {
+                    Logger.LogError($"[ApiProcessLastLogs] Process {data} not found.");
+                    return new() { Data = "Process not found", StatusCode = 404 };
+                }
+
+                
+                Logger.LogInfo($"Returning status for process {data}.");
+
+                return new() { Data = process.ProcessHandler.GetLastLogs(), StatusCode = 200 };
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error while getting process status: {ex.Message}");
+                return new() { Data = "Error while getting process status", StatusCode = 500 };
+            }
+        }
+
+        private ServerMessageFormat ApiProcessLastErrors(string data)
+        {
+            try
+            {
+                var process = m_Manager.FindProcess(data);
+                if (process == null)
+                {
+                    Logger.LogError($"[ApiProcessLastLogs] Process {data} not found.");
+                    return new() { Data = "Process not found", StatusCode = 404 };
+                }
+
+
+                Logger.LogInfo($"Returning status for process {data}.");
+
+                return new() { Data = process.ProcessHandler.GetLastErrors(), StatusCode = 200 };
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error while getting process status: {ex.Message}");
+                return new() { Data = "Error while getting process status", StatusCode = 500 };
             }
         }
     }

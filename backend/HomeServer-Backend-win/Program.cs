@@ -121,7 +121,7 @@ namespace HomeServer_Backend
             Console.WriteLine("Press any key to start test");
             Console.ReadKey();
 
-            Logger.LogInfo("Home Server test Starting...");
+            Console.WriteLine("Home Server test Starting...");
             ServerCore Core = new ServerCore();
 
             Logger.LogInfo("Loading data");

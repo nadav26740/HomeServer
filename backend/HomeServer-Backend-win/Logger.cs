@@ -114,6 +114,12 @@ namespace HomeServer_Backend
         /// <param name="path">New Log path</param>
         public static void ForceSetLoggingPath(string path)
         {
+            if (path == m_logPath)
+            {
+                LogInfo($"Not changing Log Path because already set to: {path}");
+                return;
+            }
+
             LogWarn($"Changing Log Path to: {path}");
             m_logPath = path;
             if (Logger.m_instance != null)
