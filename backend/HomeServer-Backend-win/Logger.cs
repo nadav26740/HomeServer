@@ -164,10 +164,10 @@ namespace HomeServer_Backend
             string logMessage = $"Error: {message}";
 
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine($"[{DateTime.Now.ToString()}] {message}");
+            Console.Error.WriteLine($"[{DateTime.Now.ToString()}] {logMessage}");
             Console.ResetColor();
 
-            await this.P_SaveLog(message);
+            await this.P_SaveLog(logMessage);
         }
 
         public static void LogError(string message)
