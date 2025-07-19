@@ -78,7 +78,7 @@ namespace HomeServer_Backend
                 return;
 
             // Write logs
-            Console.WriteLine(message);
+            Console.WriteLine($"[{DateTime.Now.ToString()}] {message}");
             Console.ResetColor();
 
             await Task.Run(() =>
@@ -131,7 +131,7 @@ namespace HomeServer_Backend
         private void P_LogInfo(string message)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            string logMessage = $"[{DateTime.Now.ToString()}] Info: {message}";        
+            string logMessage = $"Info: {message}";        
             this.P_Log(logMessage);
         }
 
@@ -144,7 +144,7 @@ namespace HomeServer_Backend
         private void P_LogWarn(string message)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            string logMessage = $"[{DateTime.Now.ToString()}] Warn: {message}";
+            string logMessage = $"Warn: {message}";
             this.P_Log(logMessage);
         }
 
@@ -157,7 +157,7 @@ namespace HomeServer_Backend
         private void P_LogError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            string logMessage = $"[{DateTime.Now.ToString()}] Error: {message}";
+            string logMessage = $"Error: {message}";
             this.P_Log(logMessage);
         }
 

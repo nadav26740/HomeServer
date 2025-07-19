@@ -122,6 +122,9 @@ namespace HomeServer_Backend.Communication
                         byte[] response = Encoding.UTF8.GetBytes(message);
                         await stream.WriteAsync(response, 0, response.Length);
                         Logger.LogInfo($"(Client {ClientRemoteEndPoint}) Response sent: {message}");
+                        
+                        // TODO: ADD ON PRODUCTION
+                        // client.Close(); // COMMENTED FOR DEBUG ONLY
                     }
                 }
             }

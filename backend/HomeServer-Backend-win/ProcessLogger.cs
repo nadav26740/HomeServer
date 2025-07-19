@@ -73,7 +73,7 @@ namespace HomeServer_Backend
         /// <param name="message">Log Message</param>
         public void LogInfo(string message)
         {
-            this.P_Log($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {message}");
+            this.P_Log($"INFO - {message}");
         }
 
         private void P_Log(string message)
@@ -86,7 +86,7 @@ namespace HomeServer_Backend
             LastLogs.Enqueue(new Tuple<DateTime, string>(DateTime.Now, message));
 
 
-            Console.WriteLine($"({m_ProcessName}) {message}");
+            Console.WriteLine($"({m_ProcessName}) [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}");
 
             if (LogFileWriter != null)
             {
@@ -98,7 +98,7 @@ namespace HomeServer_Backend
 
         public void LogError(string message)
         {
-            string formatedLog = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR - {message}";
+            string formatedLog = $"ERROR - {message}";
             this.P_Log(formatedLog);
 
             if (LastErrors.Count >= MaxLogsInMemory)
