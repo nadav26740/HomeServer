@@ -115,8 +115,10 @@ namespace HomeServer_Backend.Communication
 
                         Logger.LogInfo($"{{ \"IP\": \"{ClientRemoteEndPoint}\" ,\"message\":{messageFormated} }}");
 
-                        // Echo back the message
-                        message = JsonConvert.SerializeObject( ClientMessageResponder?.Invoke(messageFormated)) ?? new ServerMessageFormat().SerilizeToJson();
+                        // Serilizing the message into json
+                        message = JsonConvert.SerializeObject( ClientMessageResponder?.Invoke(messageFormated), Formatting.None,
+                            new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.None}) ?? new ServerMessageFormat().SerilizeToJson();
+
                         byte[] response = Encoding.UTF8.GetBytes(message);
                         await stream.WriteAsync(response, 0, response.Length);
                         Logger.LogInfo($"(Client {ClientRemoteEndPoint}) Response sent: {message}");
