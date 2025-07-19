@@ -118,6 +118,11 @@ namespace HomeServer_Backend.Core
             }
         }
 
+        /// <summary>
+        /// Getting Processes tag and return his last logs
+        /// </summary>
+        /// <param name="data">Processes tag</param>
+        /// <returns>ServerMessageFormat Contains logs or failure answer</returns>
         private ServerMessageFormat ApiProcessLastLogs(string data)
         {
             try
@@ -140,6 +145,12 @@ namespace HomeServer_Backend.Core
                 return new() { Data = "Error while getting process status", StatusCode = 500 };
             }
         }
+
+        /// <summary>
+        /// Getting Processes tag and return his last errors
+        /// </summary>
+        /// <param name="data">Processes tag</param>
+        /// <returns>ServerMessageFormat Contains errors or failure answer</returns>
 
         private ServerMessageFormat ApiProcessLastErrors(string data)
         {

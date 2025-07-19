@@ -74,16 +74,20 @@ namespace HomeServer_Backend
         /// <param name="message"></param>
         private async void P_Log(string message)
         {
-            if (!Config.data.EnableLogging)
-                return;
-
             // Write logs
             Console.WriteLine($"[{DateTime.Now.ToString()}] {message}");
             Console.ResetColor();
 
+            await P_SaveLog(message); // Save log to file asynchronously
+        }
+
+        private async Task P_SaveLog(string message)
+        {
+            if (!Config.data.EnableLogging)
+                return;
+
             await Task.Run(() =>
             {
-                
                 if (LogFileWriter != null)
                 {
                     FileUsageMutex.WaitOne(); // Ensure thread safety when writing to the file
@@ -155,11 +159,15 @@ namespace HomeServer_Backend
         }   
 
         // Error Info
-        private void P_LogError(string message)
+        private async void P_LogError(string message)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
             string logMessage = $"Error: {message}";
-            this.P_Log(logMessage);
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine($"[{DateTime.Now.ToString()}] {message}");
+            Console.ResetColor();
+
+            await this.P_SaveLog(message);
         }
 
         public static void LogError(string message)
