@@ -19,7 +19,7 @@ namespace HomeServer_Backend
 
         protected Dictionary<string, ProcessSlave> m_ProcessMap;
         Thread m_Supervisor_Thread;
-        bool Running = true;
+        bool Running = false;
 
         /// <summary>
         /// Indicates if the manager is running and supervising processes.
@@ -33,7 +33,6 @@ namespace HomeServer_Backend
             ManagerCommandMutex = new Mutex();
             m_ProcessMap = new Dictionary<string, ProcessSlave>();
             m_Supervisor_Thread = new Thread(new ThreadStart(this.Supervising));
-            m_Supervisor_Thread.Start();
             Logger.LogInfo($"Process Manager Started on memory ${this}");
         }
 
@@ -93,7 +92,8 @@ namespace HomeServer_Backend
                 return false;
             }
 
-            this.Shutdown(true);
+            if (Running)
+                this.Shutdown(true);
 
             Running = true;
             m_Supervisor_Thread = new Thread(new ThreadStart(this.Supervising));

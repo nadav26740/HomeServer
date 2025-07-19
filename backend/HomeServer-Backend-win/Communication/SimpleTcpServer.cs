@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 
 
 namespace HomeServer_Backend.Communication
@@ -115,7 +116,7 @@ namespace HomeServer_Backend.Communication
                         Logger.LogInfo($"{{ \"IP\": \"{ClientRemoteEndPoint}\" ,\"message\":{messageFormated} }}");
 
                         // Echo back the message
-                        message = ClientMessageResponder?.Invoke(messageFormated).SerilizeToJson() ?? new ServerMessageFormat().SerilizeToJson();
+                        message = JsonConvert.SerializeObject( ClientMessageResponder?.Invoke(messageFormated)) ?? new ServerMessageFormat().SerilizeToJson();
                         byte[] response = Encoding.UTF8.GetBytes(message);
                         await stream.WriteAsync(response, 0, response.Length);
                         Logger.LogInfo($"(Client {ClientRemoteEndPoint}) Response sent: {message}");

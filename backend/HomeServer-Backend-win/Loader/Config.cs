@@ -10,8 +10,8 @@ namespace HomeServer_Backend.Loader
     public struct ConfigData
     {
         // Default paths
+        public const string default_config_path = "config.json";
         private const string default_operator_password = "Admin129716";
-        private const string default_config_path = "config.json";
         private const string default_Process_data_path = "Processes.json";
         private const string default_log_path = "Logs/main";
         private const string default_backup_path = "backup.json";
@@ -70,6 +70,29 @@ namespace HomeServer_Backend.Loader
             // TODO
         }
 
+        private Config(ConfigData configData)
+        {
+            _configData = configData;
+        }
+
+        public static void LoadConfig(string path = ConfigData.default_config_path)
+        {
+            if (!Path.Exists(path))
+            {
+                throw new ArgumentException($"Config file not found at {path}. Please provide a valid path.");
+            }
+
+            try
+            {
+                ConfigData data = JsonConvert.DeserializeObject<ConfigData>(File.ReadAllText(path));
+                _instance = new Config(data);
+            }
+            catch
+            {
+                throw new Exception($"Error loading config file from {path}. Please check the file format and content.");
+            }
+        }
+
         // ============= Read Config File ===============
         /// <summary>
         /// Reads the configuration file from the specified path.
@@ -111,12 +134,12 @@ namespace HomeServer_Backend.Loader
         // ===============================================
 
         // ============= Write Config File ===============
-        private void _WriteConfigFile()
+        private void _WriteConfigFile(string? path)
         {
             string configContent = JsonConvert.SerializeObject(_configData, Formatting.Indented);
             try
             {
-                using (StreamWriter sw = new StreamWriter(_configData.ConfigPath))
+                using (StreamWriter sw = new StreamWriter(path ?? _configData.ConfigPath))
                 {
                     sw.Write(JsonConvert.SerializeObject(_configData, Formatting.Indented));
                 }
@@ -131,9 +154,9 @@ namespace HomeServer_Backend.Loader
         /// <summary>
         /// Write the current configuration to the config file.
         /// </summary>
-        public static void WriteConfigFile()
+        public static void WriteConfigFile(string? path = null)
         {
-            Instance._WriteConfigFile();
+            Instance._WriteConfigFile(path);
         }
         // ===============================================
     }
