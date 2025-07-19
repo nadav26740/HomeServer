@@ -75,57 +75,46 @@ namespace HomeServer_Backend
 
         public void Start()
         {
+            Logger.LogInfo("Server Core Start has been called");
             server_task = m_TcpServer.StartAsync();
             m_Manager.ForceStart();
-            // TODO
+            
         }
 
         public void Shutdown()
         {
+            Logger.LogWarn("Server Core shutdown has been called");
             m_TcpServer.Stop();
             m_Manager.Shutdown();
-            // TODO
         }
 
         ServerMessageFormat ClientHandler(ClientMessageFormat message)
         {            
-            // TODO:
             switch (message.Type)
             {
                 case ClientMessagesType.GET:
                     // Handle GET request
                     return HandleGETRequests(message);
-                    break;
 
                 case ClientMessagesType.POST:
                     // Handle POST request
                     return HandlePOSTRequests(message);
-                    break;
 
                 case ClientMessagesType.UPDATE:
                     // Handle UPDATE request
                     return HandleUPDATERequests(message);
 
-                    break;
-
                 case ClientMessagesType.DELETE:
                     // Handle DELETE request
                     return HandleDELETERequests(message);
-                    break;
 
                 default:
                     Logger.LogError($"Unknown message type: {message.Type} for path: {message.Path} with data: {message.Data}");
                     return new() { Data = "Unknown message type", StatusCode = 400 };
             }
-
-            Logger.LogError("Invalid request: " + message.Type + " " + message.Path + " " + message.Data);
-           return new() { Data = "Invalid request", StatusCode = 400 };
-           // TODO
-           // Handle all client requests
         }
 
         // ============ Handle Types ===============
-
 
         private ServerMessageFormat HandleGETRequests(ClientMessageFormat message)
         {
@@ -178,7 +167,13 @@ namespace HomeServer_Backend
             }
         }
 
-        // Server Answers
+
+        // Server API Answers
+        /// <summary>
+        /// Return all the server processes slaves
+        /// </summary>
+        /// <param name="data">No use for now</param>
+        /// <returns>server processes slaves in message format</returns>
         private ServerMessageFormat ApiProcesses(string data)
         {
             try
@@ -195,6 +190,11 @@ namespace HomeServer_Backend
             }
         }
 
+        /// <summary>
+        /// Return all the server processes status
+        /// </summary>
+        /// <param name="data">No use for now</param>
+        /// <returns>server processes status in message format</returns>
         private ServerMessageFormat ApiProcessesStatus(string data)
         {
             try
