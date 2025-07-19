@@ -14,9 +14,9 @@ namespace HomeServer_Backend
         private Mutex LogFileMutex;
 
         private const int MaxLogsInMemory = 25;
-        public Queue<Tuple<DateTime, string>> LastErrors { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last 10 logs
-        public Queue<Tuple<DateTime, string>> LastLogs { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last 10 logs
-        
+        public Queue<Tuple<DateTime, string>> LastErrors { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last MaxLogsInMemory logs
+        public Queue<Tuple<DateTime, string>> LastLogs { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last MaxLogsInMemory logs
+
         private DateTime LastErrorTimestamp = DateTime.MaxValue;
         private DateTime LastLogTimestamp = DateTime.MaxValue;
 
@@ -85,13 +85,12 @@ namespace HomeServer_Backend
 
             LastLogs.Enqueue(new Tuple<DateTime, string>(DateTime.Now, message));
 
-
             Console.WriteLine($"({m_ProcessName}) [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}");
 
             if (LogFileWriter != null)
             {
                 LogFileMutex.WaitOne();
-                LogFileWriter.WriteLine(message);
+                LogFileWriter.WriteLine($"[{DateTime.Now.ToString()}] {message}");
                 LogFileMutex.ReleaseMutex();
             }
         }

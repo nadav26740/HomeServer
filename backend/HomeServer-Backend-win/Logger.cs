@@ -83,10 +83,11 @@ namespace HomeServer_Backend
 
             await Task.Run(() =>
             {
+                
                 if (LogFileWriter != null)
                 {
                     FileUsageMutex.WaitOne(); // Ensure thread safety when writing to the file
-                    LogFileWriter.WriteLine(message);
+                    LogFileWriter.WriteLine($"[{DateTime.Now.ToString()}] {message}");
                     FileUsageMutex.ReleaseMutex();
                 }
             });
