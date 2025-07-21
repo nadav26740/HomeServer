@@ -20,7 +20,8 @@ namespace HomeServer_Backend.Communication
             Running = slave.ProcessRunning;
             IsAutoStart = slave.AutoStart;
             Tag = slave.ProcessHandler.Info.Tag;
-            ProcessMemoryUsage = slave.ProcessHandler.GetTotalMemoryUsage();
+            // ProcessMemoryUsage = slave.ProcessHandler.GetTotalMemoryUsage(); // need to optimize
+            ProcessMemoryUsage = -1;
             Priority = slave.Proc_Priority;
         }
 

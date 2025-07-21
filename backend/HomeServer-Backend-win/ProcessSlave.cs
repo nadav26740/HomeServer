@@ -19,31 +19,39 @@ namespace HomeServer_Backend
 
         public class ProcessSlave
         {
+            // We using diffrenet class for logs to avoid live changes issues
             public class LogsEventArgs : EventArgs
             {
-                public Tuple<DateTime, string>[] logs { get; }
+                public Tuple<long, string>[] logs { get; }
 
-                public LogsEventArgs(Tuple<DateTime, string>[] logsMessage)
+                public LogsEventArgs(Tuple<long, string>[] logsMessage)
                 {
                     logs = logsMessage;
                 }
             }
 
+            // Priority of the process for control and management
             public ProcessPriority Proc_Priority { get; set; }
+            
+            // process
             public ProcessHandler ProcessHandler { get; }
 
+
+            // start stop status and events
             public event EventHandler? OnProcessStarted;
             public bool ProcessRunning { get; private set; }
             public event EventHandler? OnProcessStopped;
 
             private event EventHandler? OnProcessCrashed; // TODO
-
-            private DateTime LastErrorTimeStamp = DateTime.MinValue;
+            
+            // Last logs
+            private long LastErrorTimeStamp = long.MinValue;
             public event EventHandler<LogsEventArgs>? OnProcessError;
 
-            private DateTime LastLogTimeStamp = DateTime.MinValue;
+            private long LastLogTimeStamp = long.MinValue;
             public event EventHandler<LogsEventArgs>? OnProcessLog;
 
+            // AUTO START
             public bool AutoStart { get; set; } = false;
             private DateTime AutoStartCooldown = DateTime.MinValue;
             private const int AutoStartCooldownSeconds = 30; // Cooldown for auto start attempts
@@ -94,11 +102,48 @@ namespace HomeServer_Backend
             {
                 AutoStartTrigger();
 
-                // Process Start Stop event checking
+                // Logs Event Checking
+                if (ProcessRunning)
+                {
+                    Tuple<long, string>[] lastLogs;
+
+                    // Checking if there is any event that can be invoke before wasting 
+                    if (OnProcessLog != null)
+                    {
+                        lastLogs = ProcessHandler.GetLastLogs().ToArray();
+                        if (lastLogs.Length > 0)
+                        {
+                            long lastLOgTime = lastLogs.Last().Item1;
+
+                            if (lastLogs?.Length > 0 && lastLogs?.Last().Item1 > LastLogTimeStamp)
+                            {
+                                LastLogTimeStamp = lastLogs.Last().Item1;
+
+                                OnProcessLog.Invoke(this, new LogsEventArgs(lastLogs.ToArray()));
+                            }
+                        }
+                    }
+
+                    // Checking if there is any event that can be invoke before wasting resources
+                    if (OnProcessError != null)
+                    {
+                        // Error Event checking
+                        lastLogs = ProcessHandler.GetLastErrors().ToArray();
+                        if (lastLogs?.Length > 0 && lastLogs?.Last().Item1 > LastLogTimeStamp)
+                        {
+                            LastLogTimeStamp = lastLogs.Last().Item1;
+                            OnProcessError?.Invoke(this, new LogsEventArgs(lastLogs.ToArray()));
+                        }
+                    }
+                }
+
+                // Checking if processes state has been changed
                 if (ProcessRunning != ProcessHandler.IsRunning)
                 {
+                    // Process state has been changed
                     if (ProcessRunning)
                     {
+                        // process has stopped
                         AutoStartCooldown = DateTime.Now.AddSeconds(AutoStartCooldownSeconds);
 
                         if (Proc_Priority == ProcessPriority.Core)
@@ -115,33 +160,14 @@ namespace HomeServer_Backend
                     }
                     else
                     {
+                        // process has started
                         Logger.LogInfo($"Process \"{ProcessHandler.Info.Tag}\" (Priority: {Proc_Priority}) has started.");
                         ProcessRunning = true;
                         OnProcessStarted?.Invoke(this, EventArgs.Empty);
                     }
                 }
 
-                // Logs Event Checking
-                var lastLogs = ProcessHandler.GetLastLogs().ToArray();
-                if (lastLogs.Length > 0)
-                {
-                    DateTime lastLOgTime = lastLogs.Last().Item1;
-
-                    if (lastLogs?.Length > 0 && lastLogs?.Last().Item1 > LastLogTimeStamp)
-                    {
-                        LastLogTimeStamp = lastLogs.Last().Item1;
-
-                        OnProcessLog?.Invoke(this, new LogsEventArgs(lastLogs.ToArray()));
-                    }
-                }
-
-                // Error Event checking
-                lastLogs = ProcessHandler.GetLastErrors().ToArray();
-                if (lastLogs?.Length > 0 && lastLogs?.Last().Item1 > LastLogTimeStamp)
-                {
-                    LastLogTimeStamp = lastLogs.Last().Item1;
-                    OnProcessError?.Invoke(this, new LogsEventArgs(lastLogs.ToArray()));
-                }
+                
             }
         }
     }

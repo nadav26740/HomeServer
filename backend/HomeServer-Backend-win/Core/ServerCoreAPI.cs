@@ -96,6 +96,7 @@ namespace HomeServer_Backend.Core
         /// </summary>
         /// <param name="data">No use for now</param>
         /// <returns>server processes status in message format</returns>
+        /// TODO: PROFILING AND OPTIMIZATION!
         private ServerMessageFormat ApiProcessesStatus(string data)
         {
             try
@@ -151,7 +152,7 @@ namespace HomeServer_Backend.Core
         /// </summary>
         /// <param name="data">Processes tag</param>
         /// <returns>ServerMessageFormat Contains errors or failure answer</returns>
-
+        // TODO: PROFILE AND OPTIMIZE
         private ServerMessageFormat ApiProcessLastErrors(string data)
         {
             try

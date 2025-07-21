@@ -14,8 +14,8 @@ namespace HomeServer_Backend
         private Mutex LogFileMutex;
 
         private const int MaxLogsInMemory = 25;
-        public Queue<Tuple<DateTime, string>> LastErrors { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last MaxLogsInMemory logs
-        public Queue<Tuple<DateTime, string>> LastLogs { get; } = new Queue<Tuple<DateTime, string>>(MaxLogsInMemory); // Store last MaxLogsInMemory logs
+        public Queue<Tuple<long, string>> LastErrors { get; } = new Queue<Tuple<long, string>>(MaxLogsInMemory); // Store last MaxLogsInMemory logs
+        public Queue<Tuple<long, string>> LastLogs { get; } = new Queue<Tuple<long, string>>(MaxLogsInMemory); // Store last MaxLogsInMemory logs
 
         private DateTime LastErrorTimestamp = DateTime.MaxValue;
         private DateTime LastLogTimestamp = DateTime.MaxValue;
@@ -83,7 +83,7 @@ namespace HomeServer_Backend
                 LastLogs.Dequeue();
             }
 
-            LastLogs.Enqueue(new Tuple<DateTime, string>(DateTime.Now, message));
+            LastLogs.Enqueue(new Tuple<long, string>(DateTime.Now.Ticks, message));
 
             Console.WriteLine($"({m_ProcessName}) [{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}");
 
@@ -105,7 +105,7 @@ namespace HomeServer_Backend
                 LastErrors.Dequeue();
             }
 
-            LastErrors.Enqueue(new Tuple<DateTime, string>(DateTime.Now, formatedLog));
+            LastErrors.Enqueue(new Tuple<long, string>(DateTime.Now.Ticks, formatedLog));
         }
     }
 }

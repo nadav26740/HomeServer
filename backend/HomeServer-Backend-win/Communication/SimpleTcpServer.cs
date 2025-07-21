@@ -17,6 +17,7 @@ namespace HomeServer_Backend.Communication
     {
         public delegate ServerMessageFormat ClientMessageHandler(ClientMessageFormat message);
 
+        /// TODO: add time checker and logger
         public ClientMessageHandler? ClientMessageResponder;
 
         private readonly TcpListener _listener;
