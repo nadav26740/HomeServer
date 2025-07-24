@@ -217,12 +217,18 @@ namespace HomeServer_Backend
             StopProcess();
         }
 
+        /// <summary>
+        /// Stopping the process if it is running.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// throwing error if process is not existing.
+        /// </exception>
         public void StopProcess()
         {
             if (m_process == null)
             {
                 m_logger?.LogError("Process is not running or has already exited.");
-                return;
+                throw new InvalidOperationException("no processes is running!.");
             }
 
             // TODO 
@@ -280,6 +286,10 @@ namespace HomeServer_Backend
             }
         }
 
+        /// <summary>
+        /// Starting the processes
+        /// </summary>
+        /// <exception cref="InvalidOperationException">exception if process is already not running</exception>
         public void StartProcess()
         {
             if (this.IsRunning)

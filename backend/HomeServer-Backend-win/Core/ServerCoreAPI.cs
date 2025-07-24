@@ -1,4 +1,6 @@
 ﻿using HomeServer_Backend.Communication;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +24,10 @@ namespace HomeServer_Backend.Core
                 case "/api/processes/status":
                     return ApiProcessesStatus(message.Data);
 
-                case "/api/processes/lastlogs":
+                case "/api/process/lastlogs":
                     return ApiProcessLastLogs(message.Data);
 
-                case "/api/processes/lasterrors":
+                case "/api/process/lasterrors":
                     return ApiProcessLastErrors(message.Data);
 
                 default:
@@ -39,6 +41,9 @@ namespace HomeServer_Backend.Core
         {
             switch (message.Path.ToLower())
             {
+                case "api/process/input":
+                    return ApiProcessInput(message.Data);
+
                 default:
                     // Handle other GET requests
                     Logger.LogError($"Unknown POST request path: {message.Path} with data: {message.Data}");
@@ -61,6 +66,12 @@ namespace HomeServer_Backend.Core
         {
             switch (message.Path.ToLower())
             {
+                case "/api/process/start":
+                    return ApiProcessesStart(message.Data);
+
+                case "/api/process/stop":
+                    return ApiProcessesStop(message.Data);
+
                 default:
                     // Handle other GET requests
                     Logger.LogError($"Unknown UPDATE request path: {message.Path} with data: {message.Data}");
@@ -152,7 +163,7 @@ namespace HomeServer_Backend.Core
         /// </summary>
         /// <param name="data">Processes tag</param>
         /// <returns>ServerMessageFormat Contains errors or failure answer</returns>
-        // TODO: PROFILE AND OPTIMIZE
+        // ! TODO: PROFILE AND OPTIMIZE
         private ServerMessageFormat ApiProcessLastErrors(string data)
         {
             try
@@ -173,6 +184,113 @@ namespace HomeServer_Backend.Core
             {
                 Logger.LogError($"Error while getting process status: {ex.Message}");
                 return new() { Data = "Error while getting process status", StatusCode = 500 };
+            }
+        }
+
+        /// <summary>
+        /// Trying to start process under the given tag
+        /// </summary>
+        /// <param name="data">process tag</param>
+        /// <returns>200 if successed to stop or error code if failed</returns>
+        private ServerMessageFormat ApiProcessesStart(string data)
+        {
+
+            ProcessesManager.ProcessSlave? slave = this.m_Manager.FindProcess(data);
+            if (slave == null)
+            {
+                Logger.LogError($"[ApiProcessesStart] Process {data} not found.");
+                return new ServerMessageFormat { Data = "Process not found", StatusCode = 404 };
+            }
+
+            try
+            {
+                slave.ProcessHandler.StartProcess();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"[ApiProcessesStart] Error while starting process {data}: {ex.Message}");
+                return new ServerMessageFormat { Data = $"Error while starting process: {ex.Message}", StatusCode = 500 };
+            }
+
+            Logger.LogInfo($"[ApiProcessesStart] Process {data} started successfully.");
+            return new ServerMessageFormat
+            {
+                Data = $"Process {data} started successfully.",
+                StatusCode = 200
+            };
+        }
+
+        /// <summary>
+        /// Trying to stop process under the given tag
+        /// </summary>
+        /// <param name="data">Processes tag</param>
+        /// <returns>200 if sucessed or error message</returns>
+        private ServerMessageFormat ApiProcessesStop(string data)
+        {
+            ProcessesManager.ProcessSlave? slave = this.m_Manager.FindProcess(data);
+            if (slave == null)
+            {
+                Logger.LogError($"[ApiProcessesStart] Process {data} not found.");
+                return new ServerMessageFormat { Data = "Process not found", StatusCode = 404 };
+            }
+
+            try
+            {
+                slave.ProcessHandler.StopProcess();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"[ApiProcessesStart] Error while stopping process {data}: {ex.Message}");
+                return new ServerMessageFormat { Data = $"Error while stopping process: {ex.Message}", StatusCode = 500 };
+            }
+
+            Logger.LogInfo($"[ApiProcessesStart] Process {data} stopped successfully.");
+            return new ServerMessageFormat
+            {
+                Data = $"Process {data} stopped successfully.",
+                StatusCode = 200
+            };
+        }
+
+
+        private struct ProcessInputMessage
+        {
+            public string ProcessTag { get; set; }
+            public string Input { get; set; }
+        }
+
+        private ServerMessageFormat ApiProcessInput(string data)
+        {
+            ProcessInputMessage? processInput = JsonConvert.DeserializeObject<ProcessInputMessage>(data);
+            if (processInput == null || string.IsNullOrEmpty(processInput?.ProcessTag) || string.IsNullOrEmpty(processInput?.Input))
+            {
+                Logger.LogError($"[ApiProcessInput] Invalid input data: {data}");
+                return new ServerMessageFormat { Data = "Invalid input data", StatusCode = 400 };
+            }
+
+            ProcessesManager.ProcessSlave? slave = this.m_Manager.FindProcess(processInput?.ProcessTag);
+            if (slave == null)
+            {
+                Logger.LogError($"[ApiProcessInput] Process {processInput?.ProcessTag} not found.");
+                return new ServerMessageFormat { Data = "Process not found", StatusCode = 404 };
+            }
+
+            if (!slave.ProcessHandler.IsRunning)
+            {
+                Logger.LogError($"[ApiProcessInput] Process {processInput?.ProcessTag} isn't running");
+                return new ServerMessageFormat { Data = "Process isn't running", StatusCode = 400 };
+            }
+
+            try
+            {
+                slave.ProcessHandler.WriteToProcess(processInput?.Input ?? " ");
+                Logger.LogInfo($"[ApiProcessInput] Input sent to process {processInput?.ProcessTag} successfully.");
+                return new ServerMessageFormat { Data = "Input sent successfully", StatusCode = 200 };
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"[ApiProcessInput] Error while sending input to process {processInput?.ProcessTag}: {ex.Message}");
+                return new ServerMessageFormat { Data = $"Error while sending input: {ex.Message}", StatusCode = 500 };
             }
         }
     }
