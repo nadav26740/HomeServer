@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Win32.SafeHandles;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,19 +37,69 @@ namespace HomeServer_Backend
             // process
             public ProcessHandler ProcessHandler { get; }
 
+            // Process information
+            /// <summary>
+            /// Process start time
+            /// </summary>
+            public DateTime ProcessStartTime { get { return GetProcessDateTime(); } }
+            
+            /// <summary>
+            /// Cache for optimization of process start time retrieval.
+            /// will get reset anytime the process will be recognized as stopped or crashed.
+            /// </summary>
+            private DateTime? CacheProcessStartTime = null;
+
+            /// <summary>
+            /// Getting the process start time.
+            /// </summary>
+            /// <returns>Process start time or min value if didn't start</returns>
+            private DateTime GetProcessDateTime()
+            {
+                if (null == CacheProcessStartTime)
+                {
+                    CacheProcessStartTime = ProcessHandler.GetProcessStartTime();
+                }
+                return CacheProcessStartTime.Value;
+            }
+
+            void ResetProcessStartTime(object? sender, System.EventArgs e)
+            {
+                
+                // Reset the cache when the process is stopped or crashed
+                CacheProcessStartTime = null;
+            }
+
 
             // start stop status and events
+            
+            /// <summary>
+            /// Events for process start
+            /// </summary>
             public event EventHandler? OnProcessStarted;
+            
             public bool ProcessRunning { get; private set; }
+
+            /// <summary>
+            /// Events on process stop
+            /// </summary>
             public event EventHandler? OnProcessStopped;
 
+            /// <summary>
+            /// Events on processs crash
+            /// </summary>
             private event EventHandler? OnProcessCrashed; // TODO
             
             // Last logs
             private long LastErrorTimeStamp = long.MinValue;
+            /// <summary>
+            /// Events on logs error from process
+            /// </summary>
             public event EventHandler<LogsEventArgs>? OnProcessError;
 
             private long LastLogTimeStamp = long.MinValue;
+            /// <summary>
+            /// Events on logs from process
+            /// </summary>
             public event EventHandler<LogsEventArgs>? OnProcessLog;
 
             // AUTO START
@@ -92,6 +143,8 @@ namespace HomeServer_Backend
                 Proc_Priority = priority;
                 ProcessRunning = handler.IsRunning;
 
+                // adding process start time remover
+                OnProcessCrashed += ResetProcessStartTime;
                 Console.WriteLine($"TESt: {JsonConvert.SerializeObject(this, Formatting.Indented)}");
             }
 

@@ -12,9 +12,9 @@ namespace HomeServer_Backend.Core
     public partial class ServerCore
     {
         // ============ Handle Types ===============
-
         private ServerMessageFormat HandleGETRequests(ClientMessageFormat message)
         {
+            
             switch (message.Path.ToLower())
             {
                 case "/api/processes":
@@ -137,6 +137,7 @@ namespace HomeServer_Backend.Core
         /// <returns>ServerMessageFormat Contains logs or failure answer</returns>
         private ServerMessageFormat ApiProcessLastLogs(string data)
         {
+            
             try
             {
                 var process = m_Manager.FindProcess(data);

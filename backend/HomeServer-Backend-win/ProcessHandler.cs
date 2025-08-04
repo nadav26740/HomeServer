@@ -351,5 +351,13 @@ namespace HomeServer_Backend
         {
             return m_logger != null ? m_logger.LastErrors : new Queue<Tuple<long, string>>(0);
         }
+
+        public DateTime GetProcessStartTime()
+        {
+            if (m_process == null || m_process.HasExited)
+                return DateTime.MinValue;
+
+            return m_process.StartTime;
+        }
     }
 }

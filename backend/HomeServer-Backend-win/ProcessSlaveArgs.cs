@@ -11,6 +11,7 @@ namespace HomeServer_Backend
         public ProcessesManager.ProcessPriority Priority { get; set; }
         public ProcessHandler.ProcessInfo ProcessInfo { get; set; }
         public bool AutoStart { get; set; } // If true, the process will be started automatically if it is not running
+        public DateTime ProcessStartTime { set; get; }
 
         // functions
 
@@ -19,11 +20,22 @@ namespace HomeServer_Backend
         /// </summary>
         /// <returns></returns>
         public ProcessesManager.ProcessSlave CreateProcessSlave() => new ProcessesManager.ProcessSlave(new ProcessHandler(ProcessInfo), AutoStart, Priority);
-        
+
+        public ProcessSlaveArgs() { }
+
+        public ProcessSlaveArgs(ProcessesManager.ProcessSlave slave)
+        {
+            Priority = slave.Proc_Priority;
+            ProcessInfo = slave.ProcessHandler.Info;
+            AutoStart = slave.AutoStart;
+            ProcessStartTime = slave.ProcessStartTime;
+        }
+
         // fast deserilize to json
         public string DeserilizeToJson()
         {
             return "{ \n" + 
+                        $"\t\"{nameof(ProcessStartTime)}\": \"{ProcessStartTime.ToString()}\", \n" +
                         $"\t\"{nameof(Priority)}\": {(Int16)Priority}, \n" + 
                         $"\t\"{nameof(ProcessInfo)}\":{ProcessInfo.DeserilizeToJson()}, \n" +
                         $"\t\"{nameof(AutoStart)}\": {(AutoStart ? "true" : "false")}\n" + 

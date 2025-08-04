@@ -68,12 +68,7 @@ namespace HomeServer_Backend
                     continue;
                 }
 
-                processesSlaves.Add(new ProcessSlaveArgs
-                {
-                    Priority = process.Proc_Priority,
-                    ProcessInfo = process.ProcessHandler.Info,
-                    AutoStart = process.AutoStart
-                });
+                processesSlaves.Add(new ProcessSlaveArgs(process));
             }
 
             return processesSlaves.ToArray();
