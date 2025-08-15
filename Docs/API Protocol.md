@@ -1,22 +1,25 @@
-<p align="center">
-  <h1>🌐📡 API Protocol for 🏠 HomeServer 🛠️</h1>
-</p>
+<h1 align="center">🌐📡 API Protocol for 🏠 HomeServer 🛠️</h1>
+
+<p style="color:gray;" align="center">Efficient • Secure • Reliable</p>
+
 
 **All API requests and responses are in JSON format.**
 
 >   - Server and client using JSON messages
 >
- >  - Supports both request/response and event-driven messages
+>  - Supports both request/response and event-driven messages
 >
- >  - Responses include status and data fields
+>  - Responses include status and data fields
 >
- >  - Handles TCP connections and message routing
+>  - Handles TCP connections and message routing
 >
- >  - Server uses `ServerCore` and `ServerCoreAPI` for routing
+>  - Server uses `ServerCore` and `ServerCoreAPI` for routing
 >
- >  - Server work in Message and response only protocol and does not use long socket connections
- >  
+>  - Server work in Message and response only protocol and does not use long socket connections
+> 
+ 
 <br>
+
 **Request example:**
 ```json
 {
