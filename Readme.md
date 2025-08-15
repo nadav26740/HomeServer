@@ -129,7 +129,15 @@ See [`Docs/Core.md`](Docs/Core.md) for a detailed explanation of the core system
 - 🚀 More built-in process management features
 - 🛡️ Improved error handling & logging
 - 📈 Advanced process monitoring
+- 🧪 Unit tests for core components
 - 🐧 Linux support (if feasible)
+- 📦 Docker containerization for easy deployment
+- 🔌 Plugin system for extensibility
+- 📚 Comprehensive documentation and examples
+- ⚡ Frontend dashboards for monitoring and control:
+  - 🖥️ Windows WPF-based
+  - 🐧 Linux dashboard
+  - 🌐 Web-based dashboard for cross-platform access
 
 ---
 
