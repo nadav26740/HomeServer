@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HomeServer_Backend.Core
 {
-    public partial class ServerCore
+    public partial class ServerCore : IAsyncDisposable
     {
         public const string SERVER_HOST = "127.0.0.1";
 
@@ -42,13 +42,14 @@ namespace HomeServer_Backend.Core
 
             Logger.LogInfo("Core Server Starting...");
             m_TcpServer = new(Config.data.ServerPort, SERVER_HOST);
+            
             m_Manager = new();
-            m_TcpServer.ClientMessageResponder = ClientHandler;
+            m_TcpServer.ClientMessageResponder += ClientHandler;
         }
 
-        ~ServerCore()
+        public async ValueTask DisposeAsync()
         {
-            Shutdown();
+            await Task.Run( () => Shutdown() );
         }
 
         public void LoadData()
