@@ -14,8 +14,6 @@ namespace HomeServer_Backend.Core
     {
         public const string SERVER_HOST = "127.0.0.1";
 
-
-
         private Task? server_task;
         private Task? Discovery_task;
 
@@ -95,6 +93,7 @@ namespace HomeServer_Backend.Core
             Logger.LogWarn("Server Core shutdown has been called");
             m_TcpServer.Stop();
             m_Manager.Shutdown();
+            m_DiscoveryListener.StopAsyncListening();
         }
 
         ServerMessageFormat ClientHandler(ClientMessageFormat message)

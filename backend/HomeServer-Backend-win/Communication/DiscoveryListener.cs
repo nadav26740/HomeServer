@@ -92,13 +92,17 @@ namespace HomeServer_Backend.Communication
             catch (ObjectDisposedException ex)
             {
                 // Listener was stopped, exit gracefully
-                Logger.LogWarn("Discovery Listener stopped listening: " + ex.Message);
+                Logger.LogWarn("Discovery listener Disposed: " + ex.Message);
+            }
+            catch (OperationCanceledException ex)
+            {
+                // Listener was stopped, exit gracefully
+                Logger.LogWarn("Discovery listener stopped: " + ex.Message);
             }
             catch (Exception ex)
             {
-                Logger.LogError("Error in DiscoveryListener: " + ex.Message);
+                Logger.LogError("Discovery Listener Stopped: " + ex.Message);
                 OnListenerCrashed?.Invoke(this, EventArgs.Empty);
-
             }
         }
 
