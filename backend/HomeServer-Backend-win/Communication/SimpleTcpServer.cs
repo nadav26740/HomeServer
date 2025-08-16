@@ -25,17 +25,20 @@ namespace HomeServer_Backend.Communication
         private readonly string _ipAddress;
         private bool Running = false;
 
+        public int Port => _port;
+        public string Address => _ipAddress;
+        public bool IsRunning => Running;
+
         /// <summary>
         /// allowd IPs to connect to the server.
         /// Leave empty for all ips to connect.
         /// </summary>
         public string[] AllowedIPS = { };
 
-        public SimpleTcpServer(int port, string ipAddress = "127.0.0.1")
+        public SimpleTcpServer(int port)
         {
-            _ipAddress = ipAddress;
             _port = port;
-            _listener = new TcpListener(IPAddress.Parse(_ipAddress), _port);
+            _listener = new TcpListener(IPAddress.Any, _port);
         }
 
         /// <summary>
