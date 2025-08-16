@@ -10,7 +10,7 @@ using System.Runtime.Versioning;
 
 namespace HomeServer_Backend.ExtensionsLibs
 {
-    public static class ProcessExtensions
+    internal static class ProcessExtensions
     {
         public static ProcessHandler.ProcessRunningData GetRunningData(this ProcessHandler handler)
             => new ProcessHandler.ProcessRunningData() { 

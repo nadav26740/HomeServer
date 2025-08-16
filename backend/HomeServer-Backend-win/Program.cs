@@ -116,14 +116,14 @@ namespace HomeServer_Backend
         //}
 
         // Gen 3 debug
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine(GetSplashMessage());
             Console.WriteLine("Press any key to start test");
             Console.ReadKey();
 
             Console.WriteLine("Home Server test Starting...");
-            ServerCore Core = new ServerCore();
+            await using ServerCore Core = new ServerCore();
 
             Logger.LogInfo("Loading data");
             Core.LoadData();
@@ -132,11 +132,11 @@ namespace HomeServer_Backend
             Core.Start();
             Logger.LogInfo("Server started successfully!");
 
-            Console.WriteLine("Press any key to stop");
+            Console.WriteLine("========================== Press any key to stop ==========================");
             Console.ReadKey();
             
             Logger.LogInfo("Stopping server...");
-            Core.Shutdown();
+            // Core.Shutdown();
             Logger.LogInfo("Server stopped successfully!");
 
             Console.WriteLine("Home Server test completed. Press any key to exit.");

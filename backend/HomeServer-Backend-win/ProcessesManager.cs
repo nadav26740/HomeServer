@@ -7,12 +7,11 @@ using System.Threading.Tasks;
 namespace HomeServer_Backend
 {
 
-    public partial class ProcessesManager
+    public partial class ProcessesManager : IDisposable
     { 
         /// <summary>
         /// Wrapper that will allow the process manager to control the processes in easier way
-        /// </summary>
-        
+        /// </summary
 
         const int Supervised_per_Second = 1; // How many supervise Checks per second
         const float Supervised_per_Millisecond = 1000f / Supervised_per_Second; // How many milliseconds between each supervise check
@@ -36,14 +35,10 @@ namespace HomeServer_Backend
             Logger.LogInfo($"Process Manager Started on memory ${this}");
         }
 
-        ~ProcessesManager()
-        {
-            this.Shutdown();
-
-            //if (m_Supervisor_Thread != null && m_Supervisor_Thread.IsAlive)
-            //{
-            //}
-        }
+        /// <summary>
+        /// Shuting down the manager and all the processes owned by it.
+        /// </summary>
+        public void Dispose() => this.Shutdown();
 
         public ProcessSlave[] GetProcesses()
         {
