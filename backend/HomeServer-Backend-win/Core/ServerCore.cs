@@ -14,9 +14,14 @@ namespace HomeServer_Backend.Core
     {
         public const string SERVER_HOST = "127.0.0.1";
 
+
+
         private Task? server_task;
+        private Task? Discovery_task;
+
         private ProcessesManager m_Manager;
         private SimpleTcpServer m_TcpServer;
+        private DiscoveryListener m_DiscoveryListener;
 
         public ServerCore(string ConfigPath = "")
         {
@@ -42,6 +47,7 @@ namespace HomeServer_Backend.Core
 
             Logger.LogInfo("Core Server Starting...");
             m_TcpServer = new(Config.data.ServerPort, SERVER_HOST);
+            m_DiscoveryListener = new(Config.data.DiscoveryPort);
             m_Manager = new();
             m_TcpServer.ClientMessageResponder = ClientHandler;
         }
@@ -78,6 +84,8 @@ namespace HomeServer_Backend.Core
         {
             Logger.LogInfo("Server Core Start has been called");
             server_task = m_TcpServer.StartAsync();
+            Discovery_task = m_DiscoveryListener.StartAsyncListening(); 
+
             m_Manager.ForceStart();
 
         }

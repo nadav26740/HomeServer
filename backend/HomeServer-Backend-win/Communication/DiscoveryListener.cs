@@ -46,6 +46,7 @@ namespace HomeServer_Backend.Communication
         {
             // Initialize the listener
             // This could be a UDP listener or any other type of discovery mechanism
+            this.port = port;
             udpListener = new(port);
             StopListenerToken = new();
         }
@@ -82,7 +83,7 @@ namespace HomeServer_Backend.Communication
                 
                     byte[] data = result.Buffer;
                     string message = Encoding.UTF8.GetString(data);
-                    Logger.LogInfo("[Discovery Listener] Received: " + message);
+                    Logger.LogInfo($"[Discovery Listener] Received from {result.RemoteEndPoint}: \"{message}\"");
 
                     // If it's a discovery buffer, send back response
                     _ = Task.Run(() => RequestHandler?.Invoke(message, udpListener, result.RemoteEndPoint));
