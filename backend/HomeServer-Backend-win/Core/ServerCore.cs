@@ -12,8 +12,6 @@ namespace HomeServer_Backend.Core
 {
     public partial class ServerCore : IAsyncDisposable
     {
-        public const string SERVER_HOST = "127.0.0.1";
-
         private Task? server_task;
         private ProcessesManager m_Manager;
         private SimpleTcpServer m_TcpServer;
@@ -41,7 +39,7 @@ namespace HomeServer_Backend.Core
             Logger.ForceSetLoggingPath(Config.data.LogPath);
 
             Logger.LogInfo("Core Server Starting...");
-            m_TcpServer = new(Config.data.ServerPort, SERVER_HOST);
+            m_TcpServer = new(Config.data.ServerPort);
             
             m_Manager = new();
             m_TcpServer.ClientMessageResponder += ClientHandler;
