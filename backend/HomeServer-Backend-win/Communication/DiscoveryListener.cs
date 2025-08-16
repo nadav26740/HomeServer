@@ -25,7 +25,7 @@ namespace HomeServer_Backend.Communication
         /// <summary>
         /// Discovery request handler event.
         /// </summary>
-        public DiscoveryRequestHandler? RequestHandler;
+        public DiscoveryRequestHandler? OnDiscoveryRequest;
         
         /// <summary>
         /// Discovery listener stopped event.
@@ -86,7 +86,7 @@ namespace HomeServer_Backend.Communication
                     Logger.LogInfo($"[Discovery Listener] Received from {result.RemoteEndPoint}: \"{message}\"");
 
                     // If it's a discovery buffer, send back response
-                    _ = Task.Run(() => RequestHandler?.Invoke(message, udpListener, result.RemoteEndPoint));
+                    _ = Task.Run(() => OnDiscoveryRequest?.Invoke(message, udpListener, result.RemoteEndPoint));
                 }
             }
             catch (ObjectDisposedException ex)

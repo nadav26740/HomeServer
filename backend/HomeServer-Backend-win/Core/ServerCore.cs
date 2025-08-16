@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,15 +14,26 @@ namespace HomeServer_Backend.Core
 {
     public partial class ServerCore
     {
+        // Metadata
+        private string name = "Home Server";
+        private string version = "1.0.0";
+
+        private ProcessesManager m_Manager;
+
+        // ======== Networking ==============
         public const string SERVER_HOST = "127.0.0.1";
+        public const string DISCOVERY_REQUEST_MESSAGE = "DISCOVER_LOCAL_HOMESERVER";
 
         private Task? server_task;
         private Task? Discovery_task;
 
-        private ProcessesManager m_Manager;
         private SimpleTcpServer m_TcpServer;
         private DiscoveryListener m_DiscoveryListener;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ConfigPath"></param>
         public ServerCore(string ConfigPath = "")
         {
             try
@@ -44,8 +57,9 @@ namespace HomeServer_Backend.Core
             Logger.ForceSetLoggingPath(Config.data.LogPath);
 
             Logger.LogInfo("Core Server Starting...");
-            m_TcpServer = new(Config.data.ServerPort, SERVER_HOST);
+            m_TcpServer = new(Config.data.ServerPort);
             m_DiscoveryListener = new(Config.data.DiscoveryPort);
+            m_DiscoveryListener.OnDiscoveryRequest = HandleDiscoveryRequest; // Register discovery request handler
             m_Manager = new();
             m_TcpServer.ClientMessageResponder = ClientHandler;
         }
@@ -122,6 +136,39 @@ namespace HomeServer_Backend.Core
             }
         }
 
-        
+        private class DiscoveryResponse
+        {
+            public string Name { get; set; } = "Home Server";
+            public bool Secured { get; set; } = false; // Example secured status
+            public string IP { get; set; } = "0.0.0.0";
+            public int Port { get; set; } = 0; // Example server port
+            public string Version { get; set; } = "1.0.0"; // Example version
+            public string Message { get; set; } = "";
+
+        }
+
+        void HandleDiscoveryRequest(string buffer, UdpClient serverDiscoveryNet, IPEndPoint remoteEP)
+        {
+
+            if (buffer == DISCOVERY_REQUEST_MESSAGE)
+            {
+                DiscoveryResponse response = new DiscoveryResponse
+                {
+                    Message = "Discovery response from Home Server",
+                    Secured = false,
+                    IP = this.m_TcpServer.Address,
+                    Port = this.m_TcpServer.Port,
+                    Name = this.name,
+                    Version = this.version
+                };
+
+                // Serialize the response to JSON
+                string responseJson = JsonConvert.SerializeObject(response, Formatting.Indented);
+                byte[] responseData = Encoding.UTF8.GetBytes(responseJson);
+                serverDiscoveryNet.Send(responseData, responseData.Length, remoteEP);
+                Logger.LogInfo($"Sending discovery response: ${responseJson}");
+
+            }
+        }
     }
 }
