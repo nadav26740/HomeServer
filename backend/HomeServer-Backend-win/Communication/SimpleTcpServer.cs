@@ -35,7 +35,7 @@ namespace HomeServer_Backend.Communication
         {
             _ipAddress = ipAddress;
             _port = port;
-            _listener = new TcpListener(IPAddress.Parse(_ipAddress), _port);
+            _listener = new TcpListener(IPAddress.Any, _port);
         }
 
         /// <summary>
