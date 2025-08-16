@@ -25,7 +25,7 @@ namespace HomeServer_Backend.Communication
         /// <summary>
         /// Discovery request handler event.
         /// </summary>
-        public DiscoveryRequestHandler? RequestHandler;
+        public DiscoveryRequestHandler? OnDiscoveryRequest;
         
         /// <summary>
         /// Discovery listener stopped event.
@@ -46,6 +46,7 @@ namespace HomeServer_Backend.Communication
         {
             // Initialize the listener
             // This could be a UDP listener or any other type of discovery mechanism
+            this.port = port;
             udpListener = new(port);
             StopListenerToken = new();
         }
@@ -82,22 +83,26 @@ namespace HomeServer_Backend.Communication
                 
                     byte[] data = result.Buffer;
                     string message = Encoding.UTF8.GetString(data);
-                    Logger.LogInfo("[Discovery Listener] Received: " + message);
+                    Logger.LogInfo($"[Discovery Listener] Received from {result.RemoteEndPoint}: \"{message}\"");
 
                     // If it's a discovery buffer, send back response
-                    _ = Task.Run(() => RequestHandler?.Invoke(message, udpListener, result.RemoteEndPoint));
+                    _ = Task.Run(() => OnDiscoveryRequest?.Invoke(message, udpListener, result.RemoteEndPoint));
                 }
             }
             catch (ObjectDisposedException ex)
             {
                 // Listener was stopped, exit gracefully
-                Logger.LogWarn("Discovery Listener stopped listening: " + ex.Message);
+                Logger.LogWarn("Discovery listener Disposed: " + ex.Message);
+            }
+            catch (OperationCanceledException ex)
+            {
+                // Listener was stopped, exit gracefully
+                Logger.LogWarn("Discovery listener stopped: " + ex.Message);
             }
             catch (Exception ex)
             {
-                Logger.LogError("Error in DiscoveryListener: " + ex.Message);
+                Logger.LogError("Discovery Listener Stopped: " + ex.Message);
                 OnListenerCrashed?.Invoke(this, EventArgs.Empty);
-
             }
         }
 
