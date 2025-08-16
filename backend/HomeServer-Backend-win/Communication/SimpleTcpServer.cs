@@ -9,6 +9,7 @@ using System;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
+using System.Runtime.InteropServices;
 
 
 namespace HomeServer_Backend.Communication
@@ -18,7 +19,11 @@ namespace HomeServer_Backend.Communication
         public delegate ServerMessageFormat ClientMessageHandler(ClientMessageFormat message);
 
         /// TODO: add time checker and logger
-        public ClientMessageHandler? ClientMessageResponder;
+        public event ClientMessageHandler? ClientMessageResponder;
+        public event EventHandler? ServerStopped;
+        public event EventHandler? ServerStarted;
+        public event EventHandler? ClientConnected;
+
 
         private readonly TcpListener _listener;
         private readonly int _port;
@@ -119,6 +124,7 @@ namespace HomeServer_Backend.Communication
 
                         Logger.LogInfo($"{{ \"IP\": \"{ClientRemoteEndPoint}\" ,\"message\":{messageFormated} }}");
 
+                        // invoking the message event handler and
                         // Serilizing the message into json
                         message = JsonConvert.SerializeObject( ClientMessageResponder?.Invoke(messageFormated), Formatting.None,
                             new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.None}) ?? new ServerMessageFormat().SerilizeToJson();
