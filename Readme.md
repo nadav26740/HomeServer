@@ -58,14 +58,14 @@
 
 3. **API Communication:**  
    - Clients send JSON requests via TCP  
-   - Requests routed by [`ServerCore`](Core/ServerCore.cs) and [`ServerCoreAPI`](Core/ServerCoreAPI.cs)  
+   - Requests routed by [`ServerCore`](backend/HomeServer-Backend-win/Core/ServerCore.cs) and [`ServerCoreAPI`](backend/HomeServer-Backend-win/Core/ServerCoreAPI.cs)  
    - Responses include status codes and data
 
 4. **Core Components:**  
-   - [`ServerCore`](Core/ServerCore.cs): Main orchestrator  
-   - [`ProcessesManager`](ProcessesManager.cs): Tracks & supervises all managed processes  
-   - [`SimpleTcpServer`](Communication/SimpleTcpServer.cs): Handles TCP connections & API requests  
-   - [`Logger`](Logger.cs): Centralized logging system  
+   - [`ServerCore`](backend/HomeServer-Backend-win/Core/ServerCore.cs): Main orchestrator  
+   - [`ProcessesManager`](backend/HomeServer-Backend-win/ProcessesManager.cs): Tracks & supervises all managed processes  
+   - [`SimpleTcpServer`](backend/HomeServer-Backend-win/Communication/SimpleTcpServer.cs): Handles TCP connections & API requests  
+   - [`Logger`](backend/HomeServer-Backend-win/Logger.cs): Centralized logging system  
 
 ---
 
@@ -89,7 +89,7 @@
    ```sh
    dotnet build
    ```
-   Or open [`HomeServer-Backend.sln`](HomeServer-Backend.sln) in **Visual Studio** and build.
+   Or open [`HomeServer-Backend.sln`](backend/HomeServer-Backend-win/HomeServer-Backend.sln) in **Visual Studio** and build.
 
 5. **Run**
 
@@ -101,7 +101,7 @@
 
 ## 📡 Example API Usage
 
-See [`API-Gateway/Tester.py`](../API-Gateway/Tester.py) for Python test client.
+See [`API-Gateway/Tester.py`](backend/API-Gateway/Tester.py) for Python test client.
 
 - **Start a process**
   ```json
@@ -120,7 +120,7 @@ See [`API-Gateway/Tester.py`](../API-Gateway/Tester.py) for Python test client.
 
 ## 📖 Core Documentation
 
-See [`Docs/Core.md`](Docs/Core.md) for a detailed explanation of the core system and API routing.
+See [`Docs/Core.md`](backend/HomeServer-Backend-win/Docs/Core.md) for a detailed explanation of the core system and API routing.
 
 ---
 

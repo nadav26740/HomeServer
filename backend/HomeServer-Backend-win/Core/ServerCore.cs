@@ -12,8 +12,9 @@ using System.Threading.Tasks;
 
 namespace HomeServer_Backend.Core
 {
-    public partial class ServerCore
+    public partial class ServerCore : IAsyncDisposable
     {
+
         // Metadata
         private string name = "Home Server";
         private string version = "1.0.0";
@@ -58,15 +59,17 @@ namespace HomeServer_Backend.Core
 
             Logger.LogInfo("Core Server Starting...");
             m_TcpServer = new(Config.data.ServerPort);
+
             m_DiscoveryListener = new(Config.data.DiscoveryPort);
             m_DiscoveryListener.OnDiscoveryRequest = HandleDiscoveryRequest; // Register discovery request handler
+
             m_Manager = new();
-            m_TcpServer.ClientMessageResponder = ClientHandler;
+            m_TcpServer.ClientMessageResponder += ClientHandler;
         }
 
-        ~ServerCore()
+        public async ValueTask DisposeAsync()
         {
-            Shutdown();
+            await Task.Run( () => Shutdown() );
         }
 
         public void LoadData()
