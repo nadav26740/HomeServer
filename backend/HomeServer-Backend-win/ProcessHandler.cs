@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using HomeServer_Backend.ExtensionsLibs;
-using System.Management;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.Versioning;
 
 namespace HomeServer_Backend
 {
@@ -143,8 +143,10 @@ namespace HomeServer_Backend
             return m_process.GetMemoryUsageFormated();
         }
 
+        
         public long GetChildrensMemoryUsage()
         {
+            
             if (!this.IsRunning)
             {
                 throw new InvalidOperationException("Process is not running or has already exited.");
@@ -153,6 +155,7 @@ namespace HomeServer_Backend
             long totalMemory = 0;
             try
             {
+                
                 m_logger?.LogInfo($"Retrieving child processes memory for PID: {m_process?.Id}");
                 foreach (Process obj in this.m_process?.GetChildProcesses())
                 {
@@ -235,7 +238,7 @@ namespace HomeServer_Backend
             if (IsRunning)
             {
                 m_logger?.LogInfo($"Stopping process {m_info.Tag} with PID: {m_process?.Id}");
-                if (m_info.ExitCodeInput != null)
+                if (m_info.ExitCodeInput != null && m_info.ExitCodeInput != string.Empty)
                 {
                     WriteToProcess(m_info.ExitCodeInput);
                 }
