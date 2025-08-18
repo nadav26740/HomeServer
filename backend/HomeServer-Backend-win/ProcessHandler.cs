@@ -11,6 +11,61 @@ namespace HomeServer_Backend
 {
     public class ProcessHandler
     {
+        protected class CacheData
+        {
+            private const double default_TTL_Seconds = 3;
+            
+            public CacheData(object data, DateTime? expressionTime = null)
+            {
+                this.ExpressionTime = expressionTime ?? DateTime.Now.AddSeconds(default_TTL_Seconds);
+                this.Data = data;
+            }
+
+            public object Data;
+            public DateTime ExpressionTime;
+        }
+
+        enum CacheType
+        {
+            MemoryUsage,
+            ChildrensMemoryUsage,
+            CPUUsage
+        }
+
+        private Dictionary<CacheType, CacheData> ResourceCache = new();
+
+        /// <summary>
+        /// Check the cache for the specified type and return the cached data if it exists and is not expired.
+        /// </summary>
+        /// <param name="type"> The Type of cache to get </param>
+        /// <returns> The cache value </returns>
+        private object? CheckCache(CacheType type)
+        {
+            if (ResourceCache.TryGetValue(type, out CacheData? cacheData))
+            {
+                if (cacheData.ExpressionTime > DateTime.Now)
+                {
+                    m_logger?.LogInfo("Getting data from cache: " + type.ToString() + " - " + cacheData.ExpressionTime.ToString("yyyy-MM-dd HH:mm:ss") + " - " + cacheData.Data.ToString());
+                    return cacheData.Data;
+                }
+                else
+                {
+                    ResourceCache.Remove(type);
+                }
+            }
+            m_logger?.LogInfo("Cache miss for type: " + type.ToString() + ". Data is either expired or not found.");
+            return null;
+        }
+
+        /// <summary>
+        /// load data into the cache with an optional expiration time.
+        /// </summary>
+        private void LoadIntoCache(CacheType type, object data, DateTime? expressionTime = null)
+        {
+            m_logger?.LogInfo($"Cache Loaded with {type.ToString()} - {data.ToString()} - Expiration Time: {(expressionTime.HasValue ? expressionTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "No expiration")}");
+            ResourceCache[type] = new CacheData(data, expressionTime);
+        }
+
         public struct ProcessRunningData
         {
             public string ProcessName;
@@ -118,6 +173,54 @@ namespace HomeServer_Backend
             }
             return m_process.ProcessName;
         }
+
+        // ==================== CPU ====================
+
+        // CPU RECORDS
+        DateTime LastCPUUsageCheck;
+        double LastCPUTotalProcessorTimeCheck = 0;
+        
+        public double GetProcessCPUUsage()
+        {
+            const double TTL_SECONDS = 3; // Cache TTL in seconds
+
+            // checking if we have cached value
+            double? cachedValue = CheckCache(CacheType.CPUUsage) as double?;
+         
+            if (cachedValue.HasValue)
+            {
+                return cachedValue.Value;
+            }
+
+            if (m_process == null || m_process.HasExited)
+            {
+                throw new InvalidOperationException("Process is not running or has already exited.");
+            }
+
+            m_process.Refresh();
+
+            try
+            {
+                // Calculating the cpu usage
+                double cpuTimeSinceLastCheck = (DateTime.Now - LastCPUUsageCheck).TotalMilliseconds;
+                double averageCpuUsage = (m_process.TotalProcessorTime.TotalMilliseconds - LastCPUTotalProcessorTimeCheck) / cpuTimeSinceLastCheck;
+                LastCPUTotalProcessorTimeCheck = m_process.TotalProcessorTime.TotalMilliseconds;
+                LastCPUUsageCheck = DateTime.Now;
+
+                // Loading it into cache
+                cachedValue = averageCpuUsage / Environment.ProcessorCount;
+                LoadIntoCache(CacheType.CPUUsage, cachedValue, DateTime.Now.AddSeconds(TTL_SECONDS));
+
+                return cachedValue ?? 0;
+            }
+            catch (Exception ex)
+            {
+                m_logger?.LogError($"Error retrieving CPU usage: {ex.Message}");
+                return -1;
+            }
+        }
+
+        // ==================== MEMORY ====================
 
         public long GetMemoryUsage()
         {
@@ -325,6 +428,10 @@ namespace HomeServer_Backend
             m_process.Start();
             m_process.BeginOutputReadLine();
             m_process.BeginErrorReadLine();
+            
+            // Reseting CPU records
+            LastCPUTotalProcessorTimeCheck = 0;
+            LastCPUUsageCheck = DateTime.Now;
 
             m_logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
             Started = true;

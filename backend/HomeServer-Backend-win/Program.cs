@@ -132,6 +132,12 @@ namespace HomeServer_Backend
             Core.Start();
             Logger.LogInfo("Server started successfully!");
 
+            //Console.WriteLine("========= PRESS ANY KEY FOR Testing CACHE ===========");
+            //Console.ReadKey();
+            //Core.m_Manager.FindProcess("Minecraft Server")?.ProcessHandler.GetProcessCPUUsage();
+            //Thread.Sleep(2000);
+            //Core.m_Manager.FindProcess("Minecraft Server")?.ProcessHandler.GetProcessCPUUsage();
+
             Console.WriteLine("========================== Press any key to stop ==========================");
             Console.ReadKey();
             
