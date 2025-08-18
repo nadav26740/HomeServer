@@ -15,6 +15,7 @@ namespace HomeServer_Backend.Loader
         private const string default_Process_data_path = "Processes.json";
         private const string default_log_path = "Logs/main";
         private const string default_backup_path = "backup.json";
+        private const int default_Discover_port = 50130;
         private const int default_server_port = 3391;
         public ConfigData() 
         {
@@ -27,6 +28,7 @@ namespace HomeServer_Backend.Loader
         public string OperatorPassword  = default_operator_password;
         public bool EnableLogging  = true;
         public int ServerPort = default_server_port;
+        public int DiscoveryPort = default_Discover_port;
 
         public override readonly string ToString()
         {
