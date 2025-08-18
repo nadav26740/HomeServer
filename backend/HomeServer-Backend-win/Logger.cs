@@ -164,10 +164,10 @@ namespace HomeServer_Backend
             if (!Config.data.EnableDebugLogging)
                 return;
 
-            GetIntance().P_Log(message);
+            GetIntance().P_LogDebug(message);
         }
 
-        private async void P_LogDebug(string message)
+        private void P_LogDebug(string message)
         {
             string logMessage = $"Debug: {message}";
 

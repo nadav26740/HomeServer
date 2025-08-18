@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using HomeServer_Backend.ExtensionsLibs;
+using HomeServer_Backend.ResourcesManagment;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,60 +12,14 @@ namespace HomeServer_Backend
 {
     public class ProcessHandler
     {
-        protected class CacheData
+        enum CacheType : int
         {
-            private const double default_TTL_Seconds = 3;
-            
-            public CacheData(object data, DateTime? expressionTime = null)
-            {
-                this.ExpressionTime = expressionTime ?? DateTime.Now.AddSeconds(default_TTL_Seconds);
-                this.Data = data;
-            }
-
-            public object Data;
-            public DateTime ExpressionTime;
-        }
-
-        enum CacheType
-        {
-            MemoryUsage,
-            ChildrensMemoryUsage,
+            MemoryUsage = 0x00,
+            ChildrensMemoryUsage = 0x01,
             CPUUsage
         }
 
-        private Dictionary<CacheType, CacheData> ResourceCache = new();
-
-        /// <summary>
-        /// Check the cache for the specified type and return the cached data if it exists and is not expired.
-        /// </summary>
-        /// <param name="type"> The Type of cache to get </param>
-        /// <returns> The cache value </returns>
-        private object? CheckCache(CacheType type)
-        {
-            if (ResourceCache.TryGetValue(type, out CacheData? cacheData))
-            {
-                if (cacheData.ExpressionTime > DateTime.Now)
-                {
-                    m_logger?.LogInfo("Getting data from cache: " + type.ToString() + " - " + cacheData.ExpressionTime.ToString("yyyy-MM-dd HH:mm:ss") + " - " + cacheData.Data.ToString());
-                    return cacheData.Data;
-                }
-                else
-                {
-                    ResourceCache.Remove(type);
-                }
-            }
-            m_logger?.LogInfo("Cache miss for type: " + type.ToString() + ". Data is either expired or not found.");
-            return null;
-        }
-
-        /// <summary>
-        /// load data into the cache with an optional expiration time.
-        /// </summary>
-        private void LoadIntoCache(CacheType type, object data, DateTime? expressionTime = null)
-        {
-            m_logger?.LogInfo($"Cache Loaded with {type.ToString()} - {data.ToString()} - Expiration Time: {(expressionTime.HasValue ? expressionTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "No expiration")}");
-            ResourceCache[type] = new CacheData(data, expressionTime);
-        }
+        LocalCache m_ProcessCache;
 
         public struct ProcessRunningData
         {
@@ -143,6 +98,29 @@ namespace HomeServer_Backend
                 } } }
 
         // Logs
+
+        // ================= Constructor / Destructor ===================
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="info"></param>
+        public ProcessHandler(ProcessInfo info)
+        {
+            // TODO
+            m_info = info.Clone();
+            m_ProcessCache = new(info.Tag);
+            m_process = null;
+            // throw new Exception("ProcessHandler not implemented yet!");
+        }
+
+        ~ProcessHandler()
+        {
+            StopProcess();
+        }
+
+
+        // ============ OUTPUTS Events ============
         private void OutputLog(object sender, DataReceivedEventArgs args) 
         {
             if (args.Data == null) return;
@@ -156,6 +134,20 @@ namespace HomeServer_Backend
             }
         }
 
+        private void OutputError(object sender, DataReceivedEventArgs args)
+        {
+            if (args.Data == null) return;
+            if (m_logger != null)
+            {
+                m_logger.LogInfo(args.Data);
+            }
+            else
+            {
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {args.Data}");
+            }
+        }
+
+        // ============== INFO =============
         public int? GetProcessID()
         {
             if (m_process == null || m_process.HasExited)
@@ -174,18 +166,34 @@ namespace HomeServer_Backend
             return m_process.ProcessName;
         }
 
+        public DateTime GetProcessStartTime()
+        {
+            if (m_process == null || m_process.HasExited)
+                return DateTime.MinValue;
+
+            return m_process.StartTime;
+        }
+
         // ==================== CPU ====================
 
         // CPU RECORDS
         DateTime LastCPUUsageCheck;
         double LastCPUTotalProcessorTimeCheck = 0;
         
+        // ADD SUPPORT FOR CHILDRENS CHECK TOO
+        
+        /// <summary>
+        /// Getting the CPU usage of the process.
+        /// using cache with TTL 3 SECONDS
+        /// </summary>
+        /// <returns>cpu usage </returns>
+        /// <exception cref="InvalidOperationException">Processes not running</exception>
         public double GetProcessCPUUsage()
         {
             const double TTL_SECONDS = 3; // Cache TTL in seconds
 
             // checking if we have cached value
-            double? cachedValue = CheckCache(CacheType.CPUUsage) as double?;
+            double? cachedValue = m_ProcessCache.CheckCache((int)CacheType.CPUUsage) as double?;
          
             if (cachedValue.HasValue)
             {
@@ -209,7 +217,7 @@ namespace HomeServer_Backend
 
                 // Loading it into cache
                 cachedValue = averageCpuUsage / Environment.ProcessorCount;
-                LoadIntoCache(CacheType.CPUUsage, cachedValue, DateTime.Now.AddSeconds(TTL_SECONDS));
+                m_ProcessCache.LoadIntoCache((int)CacheType.CPUUsage, cachedValue, DateTime.Now.AddSeconds(TTL_SECONDS));
 
                 return cachedValue ?? 0;
             }
@@ -297,31 +305,7 @@ namespace HomeServer_Backend
             return ProcessExtensions.BytesToFormatedString(GetChildrensMemoryUsage());
         }
 
-        private void OutputError(object sender, DataReceivedEventArgs args)
-        {
-            if (args.Data == null) return;
-            if (m_logger != null)
-            {
-                m_logger.LogInfo(args.Data);
-            }
-            else
-            {
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {args.Data}");
-            }
-        }
-
-        public ProcessHandler(ProcessInfo info)
-        {
-            // TODO
-            m_info = info.Clone();
-            m_process = null;
-            // throw new Exception("ProcessHandler not implemented yet!");
-        }
-
-        ~ProcessHandler()
-        {
-            StopProcess();
-        }
+        // ============================ CONTROL =============================
 
         /// <summary>
         /// Stopping the process if it is running.
@@ -452,6 +436,8 @@ namespace HomeServer_Backend
                 $"Logger Path: {(m_logger != null ? m_logger.m_Logs_path : "N/A")}";
         }
 
+        // ==================== logs ==========================
+
         public Queue<Tuple<long, string>> GetLastLogs()
         {
             return m_logger != null ? m_logger.LastLogs : new Queue<Tuple<long, string>>(0);
@@ -460,14 +446,6 @@ namespace HomeServer_Backend
         public Queue<Tuple<long, string>> GetLastErrors()
         {
             return m_logger != null ? m_logger.LastErrors : new Queue<Tuple<long, string>>(0);
-        }
-
-        public DateTime GetProcessStartTime()
-        {
-            if (m_process == null || m_process.HasExited)
-                return DateTime.MinValue;
-
-            return m_process.StartTime;
         }
     }
 }
