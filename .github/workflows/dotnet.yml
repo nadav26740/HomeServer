@@ -11,8 +11,7 @@ on:
 
 jobs:
   build:
-
-    runs-on: windows-latest
+    runs-on: [ windows-latest, ubuntu-latest ]
     
     defaults:
       run:
