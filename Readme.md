@@ -4,6 +4,8 @@
       
 **A powerful, extensible backend for Windows process management,<br/> automation, and monitoring — accessible via a modern TCP API.**
 
+[![Build backend Windows NET badge](https://github.com/nadav26740/HomeServer/actions/workflows/dotnet.yml/badge.svg)](https://github.com/nadav26740/HomeServer/actions/workflows/dotnet.yml)
+
 </div>
 
 ---
