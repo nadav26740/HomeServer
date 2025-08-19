@@ -5,7 +5,7 @@ name: Build backend Windows NET
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "GitActions" ]
   pull_request:
     branches: [ "master" ]
 
