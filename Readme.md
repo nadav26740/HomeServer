@@ -79,7 +79,7 @@
 2. **Clone the Repository**
 
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/nadav26740/HomeServer.git
    cd backend/HomeServer-Backend-win
    ```
 
@@ -89,14 +89,14 @@
 4. **Build**
 
    ```sh
-   dotnet build
+   dotnet build --configuration Release
    ```
    Or open [`HomeServer-Backend.sln`](backend/HomeServer-Backend-win/HomeServer-Backend.sln) in **Visual Studio** and build.
 
 5. **Run**
 
    ```sh
-   dotnet run --project HomeServer-Backend-win/HomeServer-Backend.csproj
+   dotnet run --configuration Release &
    ```
 
 ---
