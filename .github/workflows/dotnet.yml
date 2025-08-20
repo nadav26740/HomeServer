@@ -59,8 +59,13 @@ jobs:
     - name: Run And Test
       run: |
         dotnet run --no-build --verbosity normal &
+        sleep 5 # Wating for the API to start
+        
+        # Run the Python test script
         API_PID = $!
         python ../Tests/API_Test.py
+        
+        sleep 10 # Allow some time for the API to finish processing
         kill $API_PID
     # - name: Test
     #   run: dotnet test --no-build --verbosity normal
