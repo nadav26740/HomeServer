@@ -1,19 +1,18 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: Build backend Windows NET
+name: Build backend NET
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "GitActions" ]
   pull_request:
     branches: [ "master" ]
 
 jobs:
-  build:
-
+  build-windows:
     runs-on: windows-latest
-    
+
     defaults:
       run:
         working-directory: ./backend/HomeServer-Backend-win
@@ -30,3 +29,59 @@ jobs:
       run: dotnet build --no-restore
     # - name: Test
     #   run: dotnet test --no-build --verbosity normal
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    # strategy:
+    #   matrix:
+    #     python_ver: ["3.12"]    
+    
+    steps:
+      
+    - uses: actions/checkout@v4
+
+    # Setup .NET
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+          
+    # Build project
+    - name: Build backend
+      working-directory: ./backend/HomeServer-Backend-win
+      run: |
+        dotnet restore
+        dotnet build --configuration Release
+
+      # Run backend in background
+    - name: Start backend
+      working-directory: ./backend/HomeServer-Backend-win
+      run: |
+        dotnet run --configuration Release &
+        echo $! > backend_pid.txt
+
+    # Wait before running tests
+    - name: Wait for server to start
+      run: sleep 5
+  
+    # Setup Python
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    # Run Python Discovery Test
+    - name: Run Discovery tests
+      working-directory: ./backend/Tests
+      run: python3 Discovery_Test.py
+
+    # Run Python test script
+    - name: Run API tests
+      working-directory: ./backend/Tests
+      run: python3 API_Test.py
+
+    # Stop backend process after tests
+    - name: Stop backend
+      if: always()
+      run: |
+        kill $(cat backend/HomeServer-Backend-win/backend_pid.txt) || true
