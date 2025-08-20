@@ -77,10 +77,20 @@ namespace HomeServer_Backend.Core
             // TODO:
             // Load Config..
 
-            ProcessSlaveArgs[]? procSlaves = ProcessConfigSave.ReadSlaveProcessData("processes.json");
+            ProcessSlaveArgs[]? procSlaves = null;
+            try
+            {
+                procSlaves = ProcessConfigSave.ReadSlaveProcessData("processes.json");
+            }
+            catch (Exception ex)
+            {
+               Logger.LogError($"Failed to read process configuration: {ex.Message}");
+            }
+
             if (procSlaves == null || procSlaves.Length == 0)
             {
                 Logger.LogWarn("No process slaves found in the config file. Please check your configuration.");
+                return;
             }
             else
             {
