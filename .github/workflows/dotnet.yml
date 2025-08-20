@@ -45,14 +45,13 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-    
-    - name: Restore dependencies
-      run: dotnet restore
-      
+          
     # Build project
     - name: Build backend
       working-directory: ./backend/HomeServer-Backend-win
-      run: dotnet build --configuration Release
+      run: |
+        dotnet restore
+        dotnet build --configuration Release
 
       # Run backend in background
     - name: Start backend
