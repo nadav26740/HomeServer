@@ -58,14 +58,17 @@ jobs:
 
     - name: Run And Test
       run: |
+        echo "Starting the API..."
         dotnet run --no-build --verbosity normal &
+        API_PID = $!
         sleep 5 # Wating for the API to start
         
         # Run the Python test script
-        API_PID = $!
+        echo "Running API tests..."
         python ../Tests/API_Test.py
         
         sleep 10 # Allow some time for the API to finish processing
+        echo "Killing the API..."
         kill $API_PID
     # - name: Test
     #   run: dotnet test --no-build --verbosity normal
