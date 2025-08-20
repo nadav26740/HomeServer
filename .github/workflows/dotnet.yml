@@ -32,44 +32,52 @@ jobs:
 
   build-ubuntu:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python_ver: ["3.12"]    
-
-    defaults:
-      run:
-        working-directory: ./backend/HomeServer-Backend-win
+    # strategy:
+    #   matrix:
+    #     python_ver: ["3.12"]    
     
     steps:
+      
     - uses: actions/checkout@v4
+
+    # Setup .NET
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
+      
+    # Build project
+    - name: Build backend
+      working-directory: ./backend/HomeServer-Backend-win
+      run: dotnet build --configuration Release
 
-    - name: PreTests Set up Python 3.13 # Example name for the step
-      uses: actions/setup-python@v5 # Uses the setup-python action
-      with:
-        python-version: ${{ matrix.python_ver }} # Specifies the desired Python version
-
-    - name: Run And Test
+      # Run backend in background
+    - name: Start backend
+      working-directory: ./backend/HomeServer-Backend-win
       run: |
-        echo "Starting the API..."
-        dotnet run --no-build --verbosity normal &
-        API_PID = $!
-        sleep 5 # Wating for the API to start
-        
-        # Run the Python test script
-        echo "Running API tests..."
-        python ../Tests/API_Test.py
-        
-        sleep 10 # Allow some time for the API to finish processing
-        echo "Killing the API..."
-        kill $API_PID
-    # - name: Test
-    #   run: dotnet test --no-build --verbosity normal
+        dotnet run --configuration Release &
+        echo $! > backend_pid.txt
+
+    # Wait before running tests
+    - name: Wait for server to start
+      run: sleep 5
   
+    # Setup Python
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    # Run Python test script
+    - name: Run API tests
+      working-directory: ./backend/Tests
+      run: python3 API_Test.py
+
+    # Stop backend process after tests
+    - name: Stop backend
+      if: always()
+      run: |
+        kill $(cat backend/HomeServer-Backend-win/backend_pid.txt) || true
