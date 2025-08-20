@@ -12,7 +12,7 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    
+
     defaults:
       run:
         working-directory: ./backend/HomeServer-Backend-win
@@ -32,6 +32,9 @@ jobs:
 
   build-ubuntu:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_ver: ["3.12"]    
 
     defaults:
       run:
@@ -47,6 +50,18 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+
+    - name: PreTests Set up Python 3.13 # Example name for the step
+      uses: actions/setup-python@v5 # Uses the setup-python action
+      with:
+        python-version: ${{ matrix.python_ver }} # Specifies the desired Python version
+
+    - name: Run And Test
+      run: |
+        dotnet run --no-build --verbosity normal
+        API_PID = $!
+        python ../Tests/API_Test.py
+        kill $API_PID
     # - name: Test
     #   run: dotnet test --no-build --verbosity normal
   

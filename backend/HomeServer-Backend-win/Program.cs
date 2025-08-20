@@ -120,7 +120,7 @@ namespace HomeServer_Backend
         {
             Console.WriteLine(GetSplashMessage());
             Console.WriteLine("Press any key to start test");
-            Console.ReadKey();
+            //Console.ReadKey();
 
             Console.WriteLine("Home Server test Starting...");
             await using ServerCore Core = new ServerCore();
