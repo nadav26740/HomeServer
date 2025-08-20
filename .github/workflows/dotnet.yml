@@ -70,6 +70,11 @@ jobs:
       with:
         python-version: '3.x'
 
+    # Run Python Discovery Test
+    - name: Run Discovery tests
+      working-directory: ./backend/Tests
+      run: python3 Discovery_Test.py
+
     # Run Python test script
     - name: Run API tests
       working-directory: ./backend/Tests
