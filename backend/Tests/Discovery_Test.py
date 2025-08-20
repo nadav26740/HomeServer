@@ -41,7 +41,7 @@ def discover_server(timeout=5):
     client_socket.settimeout(timeout)  # timeout in seconds
 
     # Broadcast address
-    broadcast_address = BROADCAST_ADDRESS
+    broadcast_address = BROADCAST_ADDRESS   
 
     try:
         # Send discovery message
@@ -54,7 +54,6 @@ def discover_server(timeout=5):
         StartTime = time.perf_counter()
         response = data.decode('utf-8')
         elapsed_time = time.perf_counter() - StartTime
-        totalRunTime += elapsed_time
 
         print(f"Received response: '{response}' from {server_addr[0]}:{server_addr[1]}")
         print(f"{bcolors.OKCYAN}{bcolors.BOLD} Answer time: {(elapsed_time * 1000):.0f} ms{bcolors.ENDC}")
