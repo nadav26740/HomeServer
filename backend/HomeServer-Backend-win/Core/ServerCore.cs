@@ -105,14 +105,28 @@ namespace HomeServer_Backend.Core
             // Load all data from the config file
         }
 
+        /// <summary>
+        /// Running server synced for headless
+        /// </summary>
         public void Start()
         {
             Logger.LogInfo("Server Core Start has been called");
-            server_task = m_TcpServer.StartAsync();
+            m_Manager.ForceStart();
             Discovery_task = m_DiscoveryListener.StartAsyncListening(); 
 
-            m_Manager.ForceStart();
+            m_TcpServer.Start();
+        }
 
+        /// <summary>
+        /// Running Server core async for console 
+        /// </summary>
+        public void AsyncStart()
+        {
+            Logger.LogInfo("Server Core Start has been called");
+            m_Manager.ForceStart();
+            Discovery_task = m_DiscoveryListener.StartAsyncListening();
+
+            server_task = m_TcpServer.StartAsync();
         }
 
         public void Shutdown()
