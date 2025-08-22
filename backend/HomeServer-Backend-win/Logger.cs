@@ -156,7 +156,24 @@ namespace HomeServer_Backend
         public static void LogWarn(string message)
         {
             GetIntance().P_LogWarn( message);
-        }   
+        }
+
+        // Logging Debug
+        public static void LogDebug(string message)
+        {
+            if (!Config.data.EnableDebugLogging)
+                return;
+
+            GetIntance().P_LogDebug(message);
+        }
+
+        private void P_LogDebug(string message)
+        {
+            string logMessage = $"Debug: {message}";
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            this.P_Log($"[{DateTime.Now.ToString()}] {logMessage}");
+        }
 
         // Error Info
         private async void P_LogError(string message)

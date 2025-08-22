@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using HomeServer_Backend.ExtensionsLibs;
+using HomeServer_Backend.ResourcesManagment;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,15 @@ namespace HomeServer_Backend
 {
     public class ProcessHandler
     {
+        enum CacheType : int
+        {
+            MemoryUsage = 0x00,
+            ChildrensMemoryUsage = 0x01,
+            CPUUsage
+        }
+
+        LocalCache m_ProcessCache;
+
         public struct ProcessRunningData
         {
             public string ProcessName;
@@ -88,6 +98,29 @@ namespace HomeServer_Backend
                 } } }
 
         // Logs
+
+        // ================= Constructor / Destructor ===================
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="info"></param>
+        public ProcessHandler(ProcessInfo info)
+        {
+            // TODO
+            m_info = info.Clone();
+            m_ProcessCache = new(info.Tag);
+            m_process = null;
+            // throw new Exception("ProcessHandler not implemented yet!");
+        }
+
+        ~ProcessHandler()
+        {
+            StopProcess();
+        }
+
+
+        // ============ OUTPUTS Events ============
         private void OutputLog(object sender, DataReceivedEventArgs args) 
         {
             if (args.Data == null) return;
@@ -101,6 +134,20 @@ namespace HomeServer_Backend
             }
         }
 
+        private void OutputError(object sender, DataReceivedEventArgs args)
+        {
+            if (args.Data == null) return;
+            if (m_logger != null)
+            {
+                m_logger.LogInfo(args.Data);
+            }
+            else
+            {
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {args.Data}");
+            }
+        }
+
+        // ============== INFO =============
         public int? GetProcessID()
         {
             if (m_process == null || m_process.HasExited)
@@ -118,6 +165,70 @@ namespace HomeServer_Backend
             }
             return m_process.ProcessName;
         }
+
+        public DateTime GetProcessStartTime()
+        {
+            if (m_process == null || m_process.HasExited)
+                return DateTime.MinValue;
+
+            return m_process.StartTime;
+        }
+
+        // ==================== CPU ====================
+
+        // CPU RECORDS
+        DateTime LastCPUUsageCheck;
+        double LastCPUTotalProcessorTimeCheck = 0;
+        
+        // ADD SUPPORT FOR CHILDRENS CHECK TOO
+        
+        /// <summary>
+        /// Getting the CPU usage of the process.
+        /// using cache with TTL 3 SECONDS
+        /// </summary>
+        /// <returns>cpu usage </returns>
+        /// <exception cref="InvalidOperationException">Processes not running</exception>
+        public double GetProcessCPUUsage()
+        {
+            const double TTL_SECONDS = 3; // Cache TTL in seconds
+
+            // checking if we have cached value
+            double? cachedValue = m_ProcessCache.CheckCache((int)CacheType.CPUUsage) as double?;
+         
+            if (cachedValue.HasValue)
+            {
+                return cachedValue.Value;
+            }
+
+            if (m_process == null || m_process.HasExited)
+            {
+                throw new InvalidOperationException("Process is not running or has already exited.");
+            }
+
+            m_process.Refresh();
+
+            try
+            {
+                // Calculating the cpu usage
+                double cpuTimeSinceLastCheck = (DateTime.Now - LastCPUUsageCheck).TotalMilliseconds;
+                double averageCpuUsage = (m_process.TotalProcessorTime.TotalMilliseconds - LastCPUTotalProcessorTimeCheck) / cpuTimeSinceLastCheck;
+                LastCPUTotalProcessorTimeCheck = m_process.TotalProcessorTime.TotalMilliseconds;
+                LastCPUUsageCheck = DateTime.Now;
+
+                // Loading it into cache
+                cachedValue = averageCpuUsage / Environment.ProcessorCount;
+                m_ProcessCache.LoadIntoCache((int)CacheType.CPUUsage, cachedValue, DateTime.Now.AddSeconds(TTL_SECONDS));
+
+                return cachedValue ?? 0;
+            }
+            catch (Exception ex)
+            {
+                m_logger?.LogError($"Error retrieving CPU usage: {ex.Message}");
+                return -1;
+            }
+        }
+
+        // ==================== MEMORY ====================
 
         public long GetMemoryUsage()
         {
@@ -194,31 +305,7 @@ namespace HomeServer_Backend
             return ProcessExtensions.BytesToFormatedString(GetChildrensMemoryUsage());
         }
 
-        private void OutputError(object sender, DataReceivedEventArgs args)
-        {
-            if (args.Data == null) return;
-            if (m_logger != null)
-            {
-                m_logger.LogInfo(args.Data);
-            }
-            else
-            {
-                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] INFO - {args.Data}");
-            }
-        }
-
-        public ProcessHandler(ProcessInfo info)
-        {
-            // TODO
-            m_info = info.Clone();
-            m_process = null;
-            // throw new Exception("ProcessHandler not implemented yet!");
-        }
-
-        ~ProcessHandler()
-        {
-            StopProcess();
-        }
+        // ============================ CONTROL =============================
 
         /// <summary>
         /// Stopping the process if it is running.
@@ -325,6 +412,10 @@ namespace HomeServer_Backend
             m_process.Start();
             m_process.BeginOutputReadLine();
             m_process.BeginErrorReadLine();
+            
+            // Reseting CPU records
+            LastCPUTotalProcessorTimeCheck = 0;
+            LastCPUUsageCheck = DateTime.Now;
 
             m_logger.LogInfo($"Process {m_info.Tag} started with PID: {m_process.Id}");
             Started = true;
@@ -345,6 +436,8 @@ namespace HomeServer_Backend
                 $"Logger Path: {(m_logger != null ? m_logger.m_Logs_path : "N/A")}";
         }
 
+        // ==================== logs ==========================
+
         public Queue<Tuple<long, string>> GetLastLogs()
         {
             return m_logger != null ? m_logger.LastLogs : new Queue<Tuple<long, string>>(0);
@@ -353,14 +446,6 @@ namespace HomeServer_Backend
         public Queue<Tuple<long, string>> GetLastErrors()
         {
             return m_logger != null ? m_logger.LastErrors : new Queue<Tuple<long, string>>(0);
-        }
-
-        public DateTime GetProcessStartTime()
-        {
-            if (m_process == null || m_process.HasExited)
-                return DateTime.MinValue;
-
-            return m_process.StartTime;
         }
     }
 }
