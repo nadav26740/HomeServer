@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HomeServer_Backend
 {
-    public partial class ProcessesManager
+    public partial class ProcessesManager : IDisposable
     {
         public enum ProcessPriority : Int16
         {
