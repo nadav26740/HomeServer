@@ -120,7 +120,7 @@ namespace HomeServer_Backend
         {
             Console.WriteLine(GetSplashMessage());
             Console.WriteLine("Press any key to start test");
-            Console.ReadKey();
+            //Console.ReadKey();
 
             Console.WriteLine("Home Server test Starting...");
             await using ServerCore Core = new ServerCore();
@@ -130,23 +130,12 @@ namespace HomeServer_Backend
 
             Logger.LogInfo("Starting server...");
             Core.Start();
-            Logger.LogInfo("Server started successfully!");
-
-            //Console.WriteLine("========= PRESS ANY KEY FOR Testing CACHE ===========");
-            //Console.ReadKey();
-            //Core.m_Manager.FindProcess("Minecraft Server")?.ProcessHandler.GetProcessCPUUsage();
-            //Thread.Sleep(2000);
-            //Core.m_Manager.FindProcess("Minecraft Server")?.ProcessHandler.GetProcessCPUUsage();
-
-            Console.WriteLine("========================== Press any key to stop ==========================");
-            Console.ReadKey();
             
             Logger.LogInfo("Stopping server...");
             // Core.Shutdown();
             Logger.LogInfo("Server stopped successfully!");
 
             Console.WriteLine("Home Server test completed. Press any key to exit.");
-            Console.ReadKey();
         }
     }
 }

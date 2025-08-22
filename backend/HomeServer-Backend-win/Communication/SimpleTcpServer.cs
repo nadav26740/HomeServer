@@ -81,6 +81,8 @@ namespace HomeServer_Backend.Communication
 
         public void Start()
         {
+            Running = true;
+
             _listener.Start();
             Logger.LogInfo($"Server started. Listening on {_ipAddress}:{_port}");
 
@@ -98,6 +100,7 @@ namespace HomeServer_Backend.Communication
             }
             finally
             {
+                Logger.LogWarn("Server Listener Stopped");
                 _listener.Stop();
             }
         }
