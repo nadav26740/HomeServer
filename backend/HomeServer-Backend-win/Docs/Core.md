@@ -110,6 +110,7 @@ To add new API endpoints or features:
 - [`Core/ServerCore.cs`](../Core/ServerCore.cs)
 - [`Core/ServerCoreAPI.cs`](../Core/ServerCoreAPI.cs)
 - [`Loader/Config.cs`](../Loader/Config.cs)
+- ['Config.md'](./Config.md)
 - [`ProcessesManager.cs`](../ProcessesManager.cs)
 - [`Communication/SimpleTcpServer.cs`](../Communication/SimpleTcpServer.cs)
 
