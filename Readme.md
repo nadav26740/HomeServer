@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./Docs/HomeServer%20Icon.png" width="200">
+<img src="./Assets/Logo.png" width="200">
   
 # 🏠 HomeServer
       
