@@ -11,6 +11,42 @@ HomeServer-Backend-win empowers you to control, monitor, and automate Windows pr
 
 ---
 
+## 📁 Project Structure
+
+```
+HomeServer-Backend-win/
+├── Communication/              # 🌐 Networking & protocol handling
+├── Core/                       # ⚙️ Core logic & server endpoints
+│   └── Endpoints/              #   - API endpoint implementations
+├── Docs/                       # 📚 Backend documentation
+├── ExtensionsLibs/             # 🧩 Extensions & third-party libraries
+├── Loader/                     # 🚚 Module/service loader
+└── ResourcesManagment/         # 🗃️ Resource management (files, memory, etc.)
+
+Tests/
+├───                            # ✅ Tests & integration tests
+```
+
+---
+
+## 📝 Folder Explanations
+
+- **HomeServer-Backend-win**:  
+  Main Windows backend app, containing all source code, libraries, and runtime assets.
+  - **Communication/**: Networking, protocol, and message handling logic.
+  - **Core/**: Implements primary server functionality and business logic.
+    - **Endpoints/**: RESTful/WebSocket endpoints for server control and monitoring.
+  - **Docs/**: Technical documentation for backend architecture and usage.
+  - **ExtensionsLibs/**: Optional or third-party libraries that extend functionality.
+  - **Loader/**: Dynamically loads modules, services, or plugins at runtime.
+  - **ResourcesManagment/**: Handles files, assets, and other backend resources.
+
+- **Tests/**:  
+  Automated tests to ensure reliability and correctness.  
+  _Write tests for every new feature or bugfix!_
+
+---
+
 ## 🚀 Features
 
 - ⚡ **TCP API** for process management
