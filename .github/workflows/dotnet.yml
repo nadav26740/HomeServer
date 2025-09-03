@@ -5,7 +5,7 @@ name: Build backend NET
 
 on:
   push:
-    branches: [ "master", "TestsToPytest" ]
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
@@ -82,7 +82,7 @@ jobs:
         echo "Printing files in current directory"
         ls
         echo "Running tests"
-        pytest --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+        pytest -v --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
 
     # # Run Python Discovery Test
     # - name: Run Discovery tests
