@@ -5,7 +5,7 @@ name: Build backend NET
 
 on:
   push:
-    branches: [ "master", "GitActions" ]
+    branches: [ "master", "TestsToPytest" ]
   pull_request:
     branches: [ "master" ]
 
@@ -79,6 +79,9 @@ jobs:
       working-directory: ./backend/Tests
       run: |
         pip install pytest pytest-cov
+        echo "Printing files in current directory"
+        ls
+        echo "Running tests"
         pytest --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
 
     # # Run Python Discovery Test
