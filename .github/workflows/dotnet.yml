@@ -69,16 +69,26 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'
+    
+    # Install Python dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
 
-    # Run Python Discovery Test
-    - name: Run Discovery tests
-      working-directory: ./backend/Tests
-      run: python3 Discovery_Test.py
+    - name: test with pytest
+      run: |
+        pip install pytest pytest-cov
+        pytest tests.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
 
-    # Run Python test script
-    - name: Run API tests
-      working-directory: ./backend/Tests
-      run: python3 API_Test.py
+    # # Run Python Discovery Test
+    # - name: Run Discovery tests
+    #   working-directory: ./backend/Tests
+    #   run: python3 Discovery_Test.py
+
+    # # Run Python test script
+    # - name: Run API tests
+    #   working-directory: ./backend/Tests
+    #   run: python3 API_Test.py
 
     # Stop backend process after tests
     - name: Stop backend
