@@ -1,5 +1,6 @@
 import socket
 import time
+import sys
 
 IP = "127.0.0.1"
 PORT = 3391
@@ -20,14 +21,16 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-def main():
-    if discover_server():
-        print(f"{bcolors.OKGREEN} Server found {IP} {bcolors.ENDC}") 
+def eprint(*args, **kwargs):
+    '''
+    printing error
+    '''
+    print(*args, file=sys.stderr, **kwargs)
 
-    else:
-        print(f"{bcolors.FAIL} Failed to find server! {bcolors.ENDC}")
-        exit(1)
 
+def test_Discovery():
+    '''Testing if we able to discover the server'''
+    assert discover_server()
 
 def discover_server(timeout=5):
     global IP
@@ -63,11 +66,12 @@ def discover_server(timeout=5):
         Succeeded = True
         
     except socket.timeout:
-        print("No server response received within timeout.")
+        raise TimeoutError("No server response received within time window.")
     finally:
         client_socket.close()
     return Succeeded
 
 
 if __name__ == "__main__":
-    main()
+    print("Pls run pytest")
+    exit(-1)
