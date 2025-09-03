@@ -79,7 +79,7 @@ jobs:
       working-directory: ./backend/Tests
       run: |
         pip install pytest pytest-cov
-        pytest tests.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+        pytest --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
 
     # # Run Python Discovery Test
     # - name: Run Discovery tests
