@@ -73,7 +73,7 @@
 
 ---
 
-## 🛠️ How to Compile & Run <span style="color:#0078D7;">[Windows]</span>
+## 🛠️ How to Compile & Run [Mac not tested!]
 
 1. **Install .NET 8.0 SDK**  
    👉 [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
